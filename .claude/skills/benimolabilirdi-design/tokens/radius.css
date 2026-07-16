@@ -1,0 +1,11 @@
+/* Radius — soft, rounded, friendly. Nothing sharp; pills for actions. */
+:root{
+  --r-xs:6px;
+  --r-sm:10px;
+  --r-md:14px;
+  --r-lg:20px;      /* cards */
+  --r-xl:28px;      /* sheets, big surfaces */
+  --r-2xl:36px;
+  --r-pill:999px;   /* buttons, chips */
+  --r-circle:50%;
+}

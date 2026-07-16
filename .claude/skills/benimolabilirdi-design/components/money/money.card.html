@@ -1,0 +1,25 @@
+<!-- @dsCard group="Components" viewport="700x360" name="Money — count-up, breakdown, budget" subtitle="CountUpNumber · TaxBreakdown · BudgetMeter · LiveCounter" -->
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="../../styles.css">
+<style>body{margin:0;font-family:var(--font-ui);background:var(--bg-page);padding:22px;display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.panel{background:#fff;border-radius:var(--r-lg);padding:16px;box-shadow:var(--shadow-md)}
+.shock{background:var(--surface-navy);border-radius:var(--r-lg);padding:16px;display:flex;flex-direction:column;gap:6px}</style></head>
+<body><div id="root"></div>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<script type="text/babel">
+const { CountUpNumber, TaxBreakdown, BudgetMeter, LiveCounter } = window.BenimolabilirdiDesignSystem_717d58;
+function Demo(){
+  return (<React.Fragment>
+    <div class="shock">
+      <span style={{color:"var(--navy-300)",fontSize:14,fontWeight:600}}>Bunun vergisi</span>
+      <CountUpNumber value={340.50} color="var(--coral-400)" size="52px"/>
+      <div style={{marginTop:10}}><LiveCounter value={48213905}/></div>
+    </div>
+    <div class="panel"><TaxBreakdown paid={800} tax={340}/></div>
+    <div style={{gridColumn:"1 / -1"}}><BudgetMeter total={340} remaining={122}/></div>
+  </React.Fragment>);
+}
+ReactDOM.createRoot(document.getElementById("root")).render(<Demo/>);
+</script></body></html>

@@ -1,0 +1,10 @@
+/* Webfonts — Nunito (display/warm) + DM Sans (UI/numbers). Turkish glyph support. */
+@font-face{font-family:"Nunito";src:url("../assets/fonts/Nunito-Regular.ttf") format("truetype");font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:"Nunito";src:url("../assets/fonts/Nunito-SemiBold.ttf") format("truetype");font-weight:600;font-style:normal;font-display:swap}
+@font-face{font-family:"Nunito";src:url("../assets/fonts/Nunito-Bold.ttf") format("truetype");font-weight:700;font-style:normal;font-display:swap}
+@font-face{font-family:"Nunito";src:url("../assets/fonts/Nunito-ExtraBold.ttf") format("truetype");font-weight:800;font-style:normal;font-display:swap}
+@font-face{font-family:"Nunito";src:url("../assets/fonts/Nunito-Black.ttf") format("truetype");font-weight:900;font-style:normal;font-display:swap}
+@font-face{font-family:"DM Sans";src:url("../assets/fonts/DMSans-Regular.ttf") format("truetype");font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:"DM Sans";src:url("../assets/fonts/DMSans-Medium.ttf") format("truetype");font-weight:500;font-style:normal;font-display:swap}
+@font-face{font-family:"DM Sans";src:url("../assets/fonts/DMSans-SemiBold.ttf") format("truetype");font-weight:600;font-style:normal;font-display:swap}
+@font-face{font-family:"DM Sans";src:url("../assets/fonts/DMSans-Bold.ttf") format("truetype");font-weight:700;font-style:normal;font-display:swap}

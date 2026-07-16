@@ -1,0 +1,11 @@
+/* Motion — warm, springy but restrained. Count-ups + gentle sparkle, no confetti. */
+:root{
+  --ease-out:cubic-bezier(.22,1,.36,1); /* @kind other */
+  --ease-in-out:cubic-bezier(.65,0,.35,1); /* @kind other */
+  --ease-spring:cubic-bezier(.34,1.56,.64,1); /* @kind other */
+
+  --dur-fast:140ms; /* @kind other */
+  --dur-base:240ms; /* @kind other */
+  --dur-slow:420ms; /* @kind other */
+  --dur-count:1400ms; /* @kind other */
+}

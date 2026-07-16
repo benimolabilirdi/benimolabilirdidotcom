@@ -1,0 +1,78 @@
+/* ── benimolabilirdi color system ──────────────────────────────
+   Buruk ama sıcak: warm cream ground, deep navy ink, coral accent,
+   green for the "positive / what you could have" side.
+   NOTE: coral is a WARM accent, never a flag-red; green balances it
+   so no political-flag (red-white) composition ever forms.        */
+:root{
+  /* Warm cream neutrals (surface + paper) */
+  --cream-50:#FEFBF5;
+  --cream-100:#FAF3E8;   /* core background */
+  --cream-200:#F3E7D2;
+  --cream-300:#E9D8BC;
+  --cream-400:#DBC5A0;
+
+  /* Navy ink scale (text + deep surfaces) */
+  --navy-900:#141C33;
+  --navy-800:#1E2A4A;    /* core text */
+  --navy-700:#2A3A61;
+  --navy-600:#3C5083;
+  --navy-500:#5B6F9E;
+  --navy-400:#8A99BB;
+  --navy-300:#B8C2D8;
+
+  /* Coral accent (warm, the "shock" / tax side) */
+  --coral-700:#B23D2E;
+  --coral-600:#CE4A38;
+  --coral-500:#E85D4A;   /* core accent */
+  --coral-400:#F07E6E;
+  --coral-300:#F6A99D;
+  --coral-100:#FBE0DB;
+
+  /* Green positive (the "dream / you kept" side) */
+  --green-700:#1F5B41;
+  --green-600:#256B4C;
+  --green-500:#2E7D5B;   /* core positive */
+  --green-400:#4E9E7A;
+  --green-300:#8FC4AC;
+  --green-100:#DCEEE4;
+
+  /* Warm gold — sparkle / celebration highlight */
+  --gold-500:#E8A33D;
+  --gold-300:#F2C983;
+  --gold-100:#FBEECD;
+
+  /* ── Semantic aliases ── */
+  --bg-page:var(--cream-100);
+  --bg-page-soft:var(--cream-50);
+  --surface-card:#FFFFFF;
+  --surface-sunken:var(--cream-200);
+  --surface-navy:var(--navy-800);
+  --surface-navy-soft:var(--navy-700);
+
+  --text-strong:var(--navy-900);
+  --text-body:var(--navy-800);
+  --text-muted:var(--navy-500);
+  --text-faint:var(--navy-400);
+  --text-on-dark:var(--cream-50);
+  --text-on-dark-muted:var(--navy-300);
+
+  --accent:var(--coral-500);
+  --accent-hover:var(--coral-600);
+  --accent-press:var(--coral-700);
+  --accent-soft:var(--coral-100);
+  --on-accent:#FFFFFF;
+
+  --positive:var(--green-500);
+  --positive-hover:var(--green-600);
+  --positive-soft:var(--green-100);
+  --on-positive:#FFFFFF;
+
+  --sparkle:var(--gold-500);
+  --sparkle-soft:var(--gold-100);
+
+  --border-soft:var(--cream-300);
+  --border-strong:var(--navy-300);
+  --border-on-dark:rgba(250,243,232,.16);
+
+  --focus-ring:var(--coral-400);
+}

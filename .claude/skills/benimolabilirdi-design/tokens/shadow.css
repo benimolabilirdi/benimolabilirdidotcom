@@ -1,0 +1,17 @@
+/* Shadows — warm-tinted, soft. Shadow color is navy, low alpha, never grey.
+   Cards feel like paper on a warm table; accents get a subtle colored glow. */
+:root{
+  --shadow-xs:0 1px 2px rgba(30,42,74,.06);
+  --shadow-sm:0 2px 6px rgba(30,42,74,.08);
+  --shadow-md:0 6px 18px rgba(30,42,74,.10);
+  --shadow-lg:0 14px 36px rgba(30,42,74,.14);
+  --shadow-xl:0 28px 64px rgba(30,42,74,.18);
+
+  /* Colored glows for emphasis states */
+  --glow-accent:0 8px 24px rgba(232,93,74,.30);
+  --glow-positive:0 8px 24px rgba(46,125,91,.26);
+  --glow-sparkle:0 0 20px rgba(232,163,61,.45);
+
+  /* Inset for pressed / sunken wells */
+  --inset-sm:inset 0 1px 2px rgba(30,42,74,.10);
+}

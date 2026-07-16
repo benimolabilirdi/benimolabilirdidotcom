@@ -1,0 +1,40 @@
+<!-- @dsCard group="ShareCard" viewport="900x560" name="ShareCard — üç format" subtitle="Story 9:16 · Post 4:5 · Kare 1:1 — the product's real output" -->
+<!doctype html><html lang="tr"><head><meta charset="utf-8"><link rel="stylesheet" href="../../styles.css">
+<style>html,body{margin:0;background:var(--cream-200)}
+.wrap{display:flex;gap:28px;align-items:flex-start;justify-content:center;padding:26px}
+.col{display:flex;flex-direction:column;align-items:center;gap:10px}
+.col .cap{font-family:var(--font-ui);font-weight:700;font-size:13px;color:var(--navy-600)}
+.frame{border-radius:16px;overflow:hidden;box-shadow:var(--shadow-lg)}</style></head>
+<body><div id="root"></div>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<script src="../app/data.js"></script>
+<script type="text/babel" src="ShareCard.jsx"></script>
+<script type="text/babel">
+const DATA = {
+  product: { name: "Benzin (depo)", emoji: "⛽" },
+  tax: 1248, pct: 52, remaining: 35, budget: 1248,
+  chosen: [
+    { product: { emoji: "🎬", name: "Sinema bileti", price: 320 }, qty: 2 },
+    { product: { emoji: "📚", name: "Kitap", price: 210 }, qty: 1 },
+    { product: { emoji: "🥙", name: "Döner", price: 180 }, qty: 1 },
+    { product: { emoji: "🫖", name: "Çay", price: 20 }, qty: 3 },
+  ],
+};
+function Show(){
+  const cols=[["story",235/1080],["post",300/1080],["square",300/1080]];
+  const names={story:"Story · 9:16",post:"Post · 4:5",square:"Kare · 1:1"};
+  return (<div class="wrap">{cols.map(([fmt,scale])=>{
+    const f=window.BO_FORMATS[fmt];
+    return (<div class="col" key={fmt}>
+      <div class="frame" style={{width:f.w*scale,height:f.h*scale}}>
+        <window.ShareCard format={fmt} data={DATA} scale={scale}/>
+      </div>
+      <span class="cap">{names[fmt]}</span>
+    </div>);
+  })}</div>);
+}
+ReactDOM.createRoot(document.getElementById("root")).render(<Show/>);
+</script></body></html>
