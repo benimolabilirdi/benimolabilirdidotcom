@@ -41,15 +41,12 @@ export default async function Home() {
         padding: '28px 22px 24px',
       }}
     >
-      {/* üst şerit — wordmark + kâr amacı yok */}
+      {/* üst şerit — wordmark */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Wordmark size={20} />
-        <span style={{ fontFamily: 'var(--font-ui)', fontSize: 12, fontWeight: 600, color: 'var(--text-muted)' }}>
-          kâr amacı yok
-        </span>
       </div>
 
-      {/* orta — sayaç + değer önerisi */}
+      {/* orta — sayaç (yalnız gerçek kullanım varsa) + değer önerisi */}
       <div
         style={{
           flexGrow: 1,
@@ -60,7 +57,9 @@ export default async function Home() {
           padding: '8px 0',
         }}
       >
-        <LiveCounter totalTax={stats.totalTax} totalImages={stats.totalImages} />
+        {stats.totalTax > 0 ? (
+          <LiveCounter totalTax={stats.totalTax} totalImages={stats.totalImages} />
+        ) : null}
 
         <h1
           style={{
@@ -73,7 +72,7 @@ export default async function Home() {
             margin: 0,
           }}
         >
-          Ödediğin verginin karşılığında{' '}
+          Ödediğin ekstra vergilerle{' '}
           <span style={{ position: 'relative', color: 'var(--coral-500)', whiteSpace: 'nowrap' }}>
             neler alabilirdin?
             <svg
@@ -136,7 +135,7 @@ export default async function Home() {
             margin: 0,
           }}
         >
-          Hiçbir verini saklamıyoruz. Sadece merak. ✨
+          Kimlik bilgisi istenmez, hiçbir veri saklanmaz.
         </p>
       </div>
     </main>

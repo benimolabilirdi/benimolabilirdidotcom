@@ -47,7 +47,7 @@ export function LiveCounter({ totalTax, totalImages }: Props) {
           {formatTL(totalTax)}
         </span>
         <span style={{ fontSize: 14, color: 'var(--text-on-dark-muted)', fontWeight: 500 }}>
-          vergi hesaplandı
+          ekstra vergi hesaplandı
         </span>
       </div>
       {totalImages > 0 ? (
