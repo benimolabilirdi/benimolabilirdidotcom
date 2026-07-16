@@ -1,0 +1,19 @@
+[
+  { "slug": "anneler-gunu", "name": "Anneler Günü Hediyesi", "emoji": "🌷", "kind": "occasion", "sort_order": 10 },
+  { "slug": "babalar-gunu", "name": "Babalar Günü Hediyesi", "emoji": "👔", "kind": "occasion", "sort_order": 20 },
+  { "slug": "dogum-gunu", "name": "Doğum Günü Hediyesi", "emoji": "🎂", "kind": "occasion", "sort_order": 30 },
+  { "slug": "yilbasi", "name": "Yılbaşı Hediyesi", "emoji": "🎄", "kind": "occasion", "sort_order": 40 },
+  { "slug": "sevgililer-gunu", "name": "Sevgililer Günü Hediyesi", "emoji": "💝", "kind": "occasion", "sort_order": 50 },
+  { "slug": "bayram", "name": "Bayram Hediyesi", "emoji": "🌙", "kind": "occasion", "sort_order": 60 },
+
+  { "slug": "anne", "name": "Anneme", "emoji": "👩", "kind": "recipient", "sort_order": 110 },
+  { "slug": "baba", "name": "Babama", "emoji": "👨", "kind": "recipient", "sort_order": 120 },
+  { "slug": "es", "name": "Eşime", "emoji": "💑", "kind": "recipient", "sort_order": 130 },
+  { "slug": "cocuk", "name": "Çocuğuma", "emoji": "🧒", "kind": "recipient", "sort_order": 140 },
+  { "slug": "yegen", "name": "Yeğenime", "emoji": "👶", "kind": "recipient", "sort_order": 150 },
+  { "slug": "aile", "name": "Aileme", "emoji": "👨‍👩‍👧", "kind": "recipient", "sort_order": 160 },
+  { "slug": "kendim", "name": "Kendime", "emoji": "🙋", "kind": "recipient", "sort_order": 170 },
+
+  { "slug": "kis-tatili", "name": "Kış Tatili", "emoji": "❄️", "kind": "context", "sort_order": 210 },
+  { "slug": "okul-donemi", "name": "Okul Dönemi", "emoji": "🎒", "kind": "context", "sort_order": 220 }
+]
