@@ -102,21 +102,39 @@ export function ShareActions({ data, format, shareUrl }: Props) {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'stretch' }}>
-      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-        <button onClick={handleShare} disabled={busy !== null} style={btn('#E85D4A', '#fff')}>
-          {busy === 'share' ? 'Hazırlanıyor…' : '📤 Paylaş'}
-        </button>
-        <button onClick={handleDownload} disabled={busy !== null} style={btn('#fff', '#1E2A4A', '#E9D8BC')}>
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 10,
+        alignItems: 'stretch',
+        width: '100%',
+        maxWidth: 360,
+      }}
+    >
+      {/* Paylaş = asıl eylem, tam genişlik primary. İndir + Kopyala altında ikincil. */}
+      <button onClick={handleShare} disabled={busy !== null} style={btn('#E85D4A', '#fff')}>
+        {busy === 'share' ? 'Hazırlanıyor…' : '📤 Paylaş'}
+      </button>
+      <div style={{ display: 'flex', gap: 10 }}>
+        <button
+          onClick={handleDownload}
+          disabled={busy !== null}
+          style={{ ...btn('#fff', '#1E2A4A', '#E9D8BC'), flexGrow: 1 }}
+        >
           {busy === 'download' ? 'Hazırlanıyor…' : '📥 İndir'}
         </button>
         {shareUrl ? (
-          <button onClick={handleCopyLink} disabled={busy !== null} style={btn('#fff', '#1E2A4A', '#E9D8BC')}>
-            🔗 Linki kopyala
+          <button
+            onClick={handleCopyLink}
+            disabled={busy !== null}
+            style={{ ...btn('#fff', '#1E2A4A', '#E9D8BC'), flexGrow: 1 }}
+          >
+            🔗 Kopyala
           </button>
         ) : null}
       </div>
-      {note ? <div style={{ fontSize: 13, color: '#5B6F9E' }}>{note}</div> : null}
+      {note ? <div style={{ fontSize: 13, color: '#5B6F9E', textAlign: 'center' }}>{note}</div> : null}
 
       {/* Ekran dışı sahne: rasterize edilecek gerçek boyut kart. Görünmez ama DOM'da. */}
       <div
