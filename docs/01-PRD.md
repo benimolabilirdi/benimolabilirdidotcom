@@ -42,6 +42,34 @@ Türkiye'de tüketicinin ürün fiyatları içinde ödediği vergilerin (ÖTV, K
 
 Aynı sihirbaz, farklı copy: "iPhone 17 **alacağım**. 119.000 TL **ödeyeceğim**... şunlar da benim **olabilirdi**." Görsel şablonu aynı, fiil çekimleri değişir. v1.1'de eklenir.
 
+### 3.5 Profil adımı (P1 — E1'de finalize) 🔬
+
+> ⚠️ TASLAK. Konumlandırma ve rakamlar E1'de (Fable, web search) doğrulanacak. Aşağısı yön, son metin değil.
+
+Şok ekranından **sonra** (şok anını bölmemek için), kullanıcı isteğe bağlı olarak
+kendi vergi durumunu beyan eder. Amaç: dolaylı verginin üstüne binen doğrudan vergi
+yükünü kişiselleştirmek — özellikle **maaşlı çalışan vergisini parayı hiç görmeden
+ödediği için çoğu farkında değil**; bu adım o farkındalığı da yan fayda olarak taşır.
+
+Aday seçenekler (≈5-8, atlanabilir):
+- **Asgari ücretli** → RAKAMSIZ. "Asgari ücretle çalışıyorum, gelir vergisi bile
+  ödemiyorum — ama bu üründe X TL ödedim." (Asgari ücret 2022'den beri gelir+damga
+  vergisinden istisna; "%15 kesiliyor" YANLIŞ olur, o SGK primidir. Çelişki rakamdan
+  güçlü.)
+- **Maaşlı çalışan** → dilim SEÇTİRİLİR (%15/%20/%27/%35/%40 — E1'de teyit). Kullanıcı
+  kendi dilimini beyan eder, biz iddia etmeyiz. Etikette "gelir vergisi" denir.
+- **Emekli** → RAKAMSIZ. "Yıllarca vergimi verdim, emekli oldum…"
+- **Şirket sahibi** → "%25 kurumlar vergisi" (E1'de teyit; finans %30 istisnası not).
+- **Öğrenci / serbest meslek / esnaf** → E1'de karara bağlanacak.
+
+**Kısıtlar (E1 girdisi):**
+- Rakam **kullanıcı beyanı**dır, biz hesaplamayız → §3.4 itibar riski düşük ama
+  gelir vergisi/SGK/istisna ayrımı metinlerde doğru olmalı.
+- Beyan görselde yayınlanır (kullanıcı gelir durumunu ilan eder) → adım **atlanabilir**,
+  atlanınca §4.6'daki genel cümle ("Ben zaten vergimi veriyorum") kullanılır.
+- §8 tarafsızlık: parti/lider yok, "devlet soyuyor" tonu yok — nötr, kişisel, buruk.
+- KVKV/§2: beyan DB'ye YAZILMAZ, yalnızca paylaşım linkinde encode edilir.
+
 ### 3.3 Admin paneli (P0)
 
 - Supabase Auth ile tek admin girişi (`/admin`).
@@ -101,9 +129,38 @@ Aşağıdaki oranlar Ocak 2026 bilgisiyle yazılmıştır; **seed data girilirke
 
 ### 4.5 Görselde ifade
 
+> ⚠️ Bu bölüm B2 (kabul görseli) fazında revize edildi — güncel karar §4.6'da. Aşağısı v1.0 orijinali, tarihsel referans.
+
 - Ana satır: "Bunun **X TL'si vergiydi**" (tüm vergiler toplamı).
 - İfade: **"Eğer vergiler olmasaydı"** (ÖTV değil — çünkü hepsi dahil).
 - Dipnot: "*ÖTV + KDV + bandrol/fon dahil · hesap detayı: benimolabilirdi.com/hesap*"
+
+### 4.6 Görselde ifade — B2 revizyonu (güncel)
+
+Kabul görseli üzerinde çalışırken §4.5 üç noktada değişti:
+
+1. **"vergi" kelimesi ana vurgudan çıkarıldı.** "Bunun X TL'si vergiydi" ifadesi
+   "vergi vermek istemiyorum" gibi okunabiliyordu. Yerine ürünün **gerçek kalemleri**
+   sayılıyor: büyük mercan rakamı ("Bunun 59.400 TL'si") + altında kalemler
+   ("ÖTV + KDV + TRT payı + Bakanlık fonuydu"). Kalemler `tax_formula` zincirinden
+   otomatik türer (lib/share-card.ts `taxComponentLabels`), tutara göre büyükten
+   küçüğe sıralanır, 0 TL'lik kalem yazılmaz. **Kalemler ürüne göre değişir** —
+   sabit yazılamaz, olmayan vergiyi göstermek istismar olur.
+
+2. **Geçiş cümlesi konumlandırıldı:** "Ben zaten vergimi veriyorum. Bu yan vergiler
+   olmasaydı…" Proje vergi karşıtı değil; zaten ödenen doğrudan verginin üstüne binen
+   **gizli dolaylı yükü** görünür kılıyor. Bu ayrım §8 tarafsızlığının görseldeki
+   somut hali.
+
+3. **Ana akış yalnızca ÖTV'li kategorilerle sınırlandı** (`is_purchasable`): telefon,
+   otomobil, TV, konsol, kozmetik, akaryakıt, beyaz eşya. Sadece KDV'li ürünlerin
+   (kitap, tiyatro, sağlık…) "aldım" diye seçilip düşük/sıfır vergili görsel
+   üretilmesi bir istismar kapısıydı — o ürünler hayal listesinde kalır ama şok
+   ekranına giremez. Bu, hem metni sabitler (hep ÖTV+KDV+… ailesinden) hem itibar
+   zırhını korur (§8, §3.4).
+
+**§3.5'e bağlı:** profil adımı (kullanıcının kendi vergi durumunu beyan etmesi) bu
+ifadeyi güçlendirecek — E1'de finalize edilecek, bkz. §3.5.
 
 ## 5. Kategoriler (v1)
 

@@ -15,6 +15,7 @@ import {
   FORMATS,
   fitItems,
   formatTL,
+  pastCopula,
   type ShareCardData,
   type ShareCardFormat,
   type WishItem,
@@ -25,6 +26,16 @@ type Props = {
   data: ShareCardData
   /** Tarayıcı önizlemesi için ölçek. Gerçek PNG her zaman scale=1 ile alınır. */
   scale?: number
+}
+
+/**
+ * "ÖTV + KDV + TRT payı + Bakanlık fonuydu" — bileşenler VERİDEN gelir, sabit değil.
+ * 'vergi' kelimesi bilinçli olarak kullanılmıyor: "vergi vermek istemiyorum" gibi
+ * okunabiliyor. Kalemleri saymak hem daha dürüst hem daha güçlü (Oğuzhan, B2).
+ */
+function taxComponentsLine(components: string[]): string {
+  if (components.length === 0) return 'hiç vergi yoktu'
+  return components.join(' + ') + pastCopula(components[components.length - 1])
 }
 
 /** docs/03 §3 Zone C: 'OLABİLİRDİ' altında el çizimi dalgalı çizgi. */
@@ -39,6 +50,56 @@ function WavyUnderline({ width, color }: { width: number; color: string }) {
         strokeLinecap="round"
       />
     </svg>
+  )
+}
+
+/**
+ * "iPhone 17 📱 aldım." — ürün emoji'si cümlenin İÇİNDE, hafif açılı (sticker hissi).
+ *
+ * docs/03 §3 Zone A emoji'yi ayrı, ortalanmış bir bölge olarak tarif ediyordu; Oğuzhan'ın
+ * B2 kararıyla değişti: tek başına ortalanmış emoji 1080px tuvalde etrafındaki boşluk
+ * yüzünden küçük duruyordu, cümleye girince aynı piksel boyutu iri okunuyor.
+ */
+function ProductLine({
+  name,
+  emoji,
+  textSize,
+  emojiSize,
+}: {
+  name: string
+  emoji: string
+  textSize: number
+  emojiSize: number
+}) {
+  const word: React.CSSProperties = {
+    display: 'flex',
+    fontFamily: FONT_DISPLAY,
+    fontSize: textSize,
+    fontWeight: 700,
+    lineHeight: 1.15,
+  }
+  return (
+    <div
+      style={{
+        display: 'flex',
+        flexWrap: 'wrap',
+        alignItems: 'center',
+        gap: textSize * 0.2,
+      }}
+    >
+      <div style={word}>{name}</div>
+      <div
+        style={{
+          display: 'flex',
+          fontSize: emojiSize,
+          lineHeight: 1,
+          transform: 'rotate(9deg)',
+        }}
+      >
+        {emoji}
+      </div>
+      <div style={word}>aldım.</div>
+    </div>
   )
 }
 
@@ -114,6 +175,11 @@ export function ShareCard({ format = 'story', data, scale = 1 }: Props) {
   const s = isOg ? 0.62 : format === 'post' ? 0.82 : 1 // format ölçek katsayısı
   const hero = s * (roomy ? 1.1 : 1)
 
+  // Şok satırı tek satırda kalmalı: rakam büyüdükçe (1.240.000 gibi) taşmasın diye küçülür.
+  // Kaba ama yeterli — asıl ölçüm satori'de de tarayıcıda da yapılamıyor.
+  const shockText = `Bunun ${formatTL(data.totalTax)}'si`
+  const shockSize = 110 * hero * Math.min(1, 18 / shockText.length)
+
   const shell: React.CSSProperties = {
     width: f.w,
     height: f.h,
@@ -140,27 +206,16 @@ export function ShareCard({ format = 'story', data, scale = 1 }: Props) {
             paddingRight: 40,
           }}
         >
-          <div style={{ display: 'flex', fontSize: 64, lineHeight: 1 }}>{data.product.emoji}</div>
+          <ProductLine name={data.product.name} emoji={data.product.emoji} textSize={32} emojiSize={84} />
           <div
             style={{
               display: 'flex',
               fontFamily: FONT_DISPLAY,
-              fontSize: 36,
-              fontWeight: 700,
-              marginTop: 14,
-              lineHeight: 1.2,
-            }}
-          >
-            {`${data.product.name} aldım.`}
-          </div>
-          <div
-            style={{
-              display: 'flex',
-              fontFamily: FONT_DISPLAY,
-              fontSize: 30,
-              fontWeight: 600,
-              color: C.inkSoft,
-              marginTop: 4,
+              fontSize: 38,
+              fontWeight: 800,
+              color: C.ink,
+              lineHeight: 1.15,
+              marginTop: 16,
             }}
           >
             {`${formatTL(data.retailPrice)} ödedim.`}
@@ -168,16 +223,19 @@ export function ShareCard({ format = 'story', data, scale = 1 }: Props) {
           <div
             style={{
               display: 'flex',
+              flexDirection: 'column',
               fontFamily: FONT_DISPLAY,
-              fontSize: 52,
               fontWeight: 800,
               color: C.accent,
-              marginTop: 14,
-              letterSpacing: '-0.02em',
-              lineHeight: 1.1,
+              marginTop: 12,
+              letterSpacing: '-0.025em',
+              lineHeight: 1.06,
             }}
           >
-            {`Bunun ${formatTL(data.totalTax)}'si vergiydi. 💸`}
+            <div style={{ display: 'flex', fontSize: 60 }}>{`Bunun ${formatTL(data.totalTax)}'si`}</div>
+            <div style={{ display: 'flex', fontSize: 26, lineHeight: 1.25, marginTop: 6 }}>
+              {`${taxComponentsLine(data.taxComponents)} 💸`}
+            </div>
           </div>
           <div style={{ display: 'flex', marginTop: 18 }}>
             <WavyUnderline width={300} color={C.accent} />
@@ -216,40 +274,60 @@ export function ShareCard({ format = 'story', data, scale = 1 }: Props) {
 
   // ─── Story (1080×1920) / Post (1080×1080): dikey, Zone A–F (docs/03 §3)
   return (
-    <div style={{ ...shell, padding: `${64 * s}px ${56 * s}px ${44 * s}px` }}>
-      {/* Zone A — ürün emoji */}
-      <div style={{ display: 'flex', justifyContent: 'center', fontSize: 130 * hero, lineHeight: 1 }}>
-        {data.product.emoji}
-      </div>
-
-      {/* Zone B — hikâye */}
-      <div style={{ display: 'flex', flexDirection: 'column', marginTop: 28 * s }}>
-        <div style={{ display: 'flex', fontFamily: FONT_DISPLAY, fontSize: 56 * hero, fontWeight: 700, lineHeight: 1.15 }}>
-          {`${data.product.name} aldım.`}
-        </div>
-        <div style={{ display: 'flex', fontFamily: FONT_DISPLAY, fontSize: 56 * hero, fontWeight: 700, lineHeight: 1.15 }}>
+    <div style={{ ...shell, padding: `${72 * s}px ${56 * s}px ${44 * s}px` }}>
+      {/* Zone A+B — hikâye (emoji artık cümlenin içinde, ayrı bölge değil) */}
+      <div style={{ display: 'flex', flexDirection: 'column' }}>
+        {/* Crescendo: sakin giriş → tansiyon yükselir → feryat.
+            Boyut ve ağırlık basamak basamak çıkar: 52 → 64 → 88. */}
+        <ProductLine
+          name={data.product.name}
+          emoji={data.product.emoji}
+          textSize={52 * hero}
+          emojiSize={130 * hero}
+        />
+        <div
+          style={{
+            display: 'flex',
+            fontFamily: FONT_DISPLAY,
+            fontSize: 64 * hero,
+            fontWeight: 800,
+            color: C.ink,
+            lineHeight: 1.15,
+            letterSpacing: '-0.01em',
+            marginTop: 30 * s,
+          }}
+        >
           {`${formatTL(data.retailPrice)} ödedim.`}
         </div>
         <div
           style={{
             display: 'flex',
+            flexDirection: 'column',
             fontFamily: FONT_DISPLAY,
-            fontSize: 68 * hero,
             fontWeight: 800,
             color: C.accent,
-            letterSpacing: '-0.02em',
-            lineHeight: 1.12,
-            marginTop: 16 * s,
+            letterSpacing: '-0.025em',
+            lineHeight: 1.06,
+            marginTop: 24 * s,
           }}
         >
-          {`Bunun ${formatTL(data.totalTax)}'si vergiydi. 💸`}
+          <div style={{ display: 'flex', fontSize: shockSize }}>
+            {`Bunun ${formatTL(data.totalTax)}'si`}
+          </div>
+          <div style={{ display: 'flex', fontSize: 44 * hero, lineHeight: 1.2, marginTop: 8 * s }}>
+            {`${taxComponentsLine(data.taxComponents)} 💸`}
+          </div>
         </div>
       </div>
 
-      {/* Zone C — geçiş */}
+      {/* Zone C — geçiş. "Vergimi zaten veriyorum" duruşu kasıtlı: proje vergi karşıtı
+          değil, gizli yüke dikkat çekiyor (PRD §8 siyasi tarafsızlık). */}
       <div style={{ display: 'flex', flexDirection: 'column', marginTop: 40 * s }}>
         <div style={{ display: 'flex', fontSize: 36 * hero, color: C.inkSoft, lineHeight: 1.3 }}>
-          Bu para vergiye gitmeseydi…
+          Ben zaten vergimi veriyorum.
+        </div>
+        <div style={{ display: 'flex', fontSize: 36 * hero, color: C.inkSoft, lineHeight: 1.3 }}>
+          Bu yan vergiler olmasaydı…
         </div>
         <div
           style={{

@@ -5,20 +5,38 @@
     "emoji": "📱",
     "sort_order": 10,
     "verified": false,
+    "e1_note": "bandrol_fon TEK bileşen olarak kalıyor, bilerek. PRD §4.2 formülü (1 + bandrol + fon) — ikisi de aynı matraha biner, toplamalı. Zincirde ayırsaydık 1.12 × 1.01 = 1.1312 olurdu, doğrusu 1.13; vergiyi %0.1 fazla gösterirdik. Etiket zaten iki kalemi de sayıyor, ShareCard '+' ile birleştirince aynı metin çıkıyor. PRD §3.1 şok ekranında da bunları tek satır istiyor. Ayrı satır GEREKİRSE lib/tax.ts'e toplamalı-grup desteği eklenmeli.",
     "tax_formula": {
       "type": "chain",
       "components": [
-        { "key": "bandrol_fon", "label": "TRT Bandrolü + Kültür Fonu", "rate": 0.13 },
+        {
+          "key": "bandrol_fon",
+          "label": "TRT payı + Bakanlık fonu",
+          "rate": 0.13
+        },
         {
           "key": "otv",
           "label": "ÖTV",
           "tiers": [
-            { "max_matrah": 640, "rate": 0.25 },
-            { "max_matrah": 1500, "rate": 0.4 },
-            { "max_matrah": null, "rate": 0.5 }
+            {
+              "max_matrah": 640,
+              "rate": 0.25
+            },
+            {
+              "max_matrah": 1500,
+              "rate": 0.4
+            },
+            {
+              "max_matrah": null,
+              "rate": 0.5
+            }
           ]
         },
-        { "key": "kdv", "label": "KDV", "rate": 0.2 }
+        {
+          "key": "kdv",
+          "label": "KDV",
+          "rate": 0.2
+        }
       ]
     }
   },
@@ -31,8 +49,16 @@
     "tax_formula": {
       "type": "chain",
       "components": [
-        { "key": "otv", "label": "ÖTV", "rate": 0.067 },
-        { "key": "kdv", "label": "KDV", "rate": 0.2 }
+        {
+          "key": "otv",
+          "label": "ÖTV",
+          "rate": 0.067
+        },
+        {
+          "key": "kdv",
+          "label": "KDV",
+          "rate": 0.2
+        }
       ]
     }
   },
@@ -46,8 +72,16 @@
     "tax_formula": {
       "type": "chain",
       "components": [
-        { "key": "otv", "label": "ÖTV", "rate": 0.067 },
-        { "key": "kdv", "label": "KDV", "rate": 0.2 }
+        {
+          "key": "otv",
+          "label": "ÖTV",
+          "rate": 0.067
+        },
+        {
+          "key": "kdv",
+          "label": "KDV",
+          "rate": 0.2
+        }
       ]
     }
   },
@@ -61,8 +95,16 @@
     "tax_formula": {
       "type": "chain",
       "components": [
-        { "key": "otv", "label": "ÖTV", "rate": 0.2 },
-        { "key": "kdv", "label": "KDV", "rate": 0.2 }
+        {
+          "key": "otv",
+          "label": "ÖTV",
+          "rate": 0.2
+        },
+        {
+          "key": "kdv",
+          "label": "KDV",
+          "rate": 0.2
+        }
       ]
     }
   },
@@ -80,12 +122,25 @@
           "key": "otv",
           "label": "ÖTV",
           "tiers": [
-            { "max_matrah": 500000, "rate": 0.45 },
-            { "max_matrah": 1450000, "rate": 0.5 },
-            { "max_matrah": null, "rate": 0.8 }
+            {
+              "max_matrah": 500000,
+              "rate": 0.45
+            },
+            {
+              "max_matrah": 1450000,
+              "rate": 0.5
+            },
+            {
+              "max_matrah": null,
+              "rate": 0.8
+            }
           ]
         },
-        { "key": "kdv", "label": "KDV", "rate": 0.2 }
+        {
+          "key": "kdv",
+          "label": "KDV",
+          "rate": 0.2
+        }
       ]
     }
   },
@@ -98,8 +153,16 @@
     "tax_formula": {
       "type": "chain",
       "components": [
-        { "key": "otv", "label": "ÖTV", "rate": 0.2 },
-        { "key": "kdv", "label": "KDV", "rate": 0.2 }
+        {
+          "key": "otv",
+          "label": "ÖTV",
+          "rate": 0.2
+        },
+        {
+          "key": "kdv",
+          "label": "KDV",
+          "rate": 0.2
+        }
       ]
     }
   },
@@ -114,8 +177,16 @@
       "type": "fixed_per_unit",
       "unit": "litre",
       "components": [
-        { "key": "otv", "label": "ÖTV", "amount_per_unit": 0.0 },
-        { "key": "kdv", "label": "KDV", "rate": 0.2 }
+        {
+          "key": "otv",
+          "label": "ÖTV",
+          "amount_per_unit": 0
+        },
+        {
+          "key": "kdv",
+          "label": "KDV",
+          "rate": 0.2
+        }
       ]
     }
   },
@@ -125,8 +196,12 @@
     "emoji": "📚",
     "sort_order": 80,
     "verified": false,
-    "e1_note": "Basılı kitapta KDV %0 — vergisiz fiyat = raf fiyatı. PRD §4.4 bunu 'dürüstlük göstergesi' olarak işaretliyor: her şeyin vergili olmadığını gösteriyor.",
-    "tax_formula": { "type": "chain", "components": [] }
+    "e1_note": "Basılı kitapta KDV %0 — vergisiz fiyat = raf fiyatı. PRD §4.4 bunu 'dürüstlük göstergesi' olarak işaretliyor: her şeyin vergili olmadığını gösteriyor. · is_purchasable false (B2 karari): OTV'si yok, ana akista secilemez. Sadece KDV'li bir urun secilip \"Bunun 0/az TL'si vergiydi\" diyen gorsel uretilmesi istismar kapisiydi (PRD §8 itibar zirhi). Hayal listesinde (is_spendable) vergisiz fiyatiyla gorunmeye devam ediyor.",
+    "tax_formula": {
+      "type": "chain",
+      "components": []
+    },
+    "is_purchasable": false
   },
   {
     "slug": "kultur-sanat",
@@ -134,11 +209,18 @@
     "emoji": "🎭",
     "sort_order": 90,
     "verified": false,
-    "e1_note": "PRD §4.4 tiyatro/konser için '%10 veya %20' diyor. Belirsizlikte DÜŞÜK oran seçildi (vergi az görünür). E1'de teyit.",
+    "e1_note": "PRD §4.4 tiyatro/konser için '%10 veya %20' diyor. Belirsizlikte DÜŞÜK oran seçildi (vergi az görünür). E1'de teyit. · is_purchasable false (B2 karari): OTV'si yok, ana akista secilemez. Sadece KDV'li bir urun secilip \"Bunun 0/az TL'si vergiydi\" diyen gorsel uretilmesi istismar kapisiydi (PRD §8 itibar zirhi). Hayal listesinde (is_spendable) vergisiz fiyatiyla gorunmeye devam ediyor.",
     "tax_formula": {
       "type": "chain",
-      "components": [{ "key": "kdv", "label": "KDV", "rate": 0.1 }]
-    }
+      "components": [
+        {
+          "key": "kdv",
+          "label": "KDV",
+          "rate": 0.1
+        }
+      ]
+    },
+    "is_purchasable": false
   },
   {
     "slug": "tatil",
@@ -146,14 +228,23 @@
     "emoji": "🏖️",
     "sort_order": 100,
     "verified": false,
-    "e1_note": "Konaklama vergisi %2 + KDV %10. DİKKAT: zincir modeli çarpımsal (1.02 × 1.10 = 1.122), gerçekte konaklama vergisi KDV matrahına dahil değilse toplamalı olmalı (1.12). Fark ~%0.2, vergiyi hafif FAZLA gösterir. E1'de teyit.",
+    "e1_note": "Konaklama vergisi %2 + KDV %10. DİKKAT: zincir modeli çarpımsal (1.02 × 1.10 = 1.122), gerçekte konaklama vergisi KDV matrahına dahil değilse toplamalı olmalı (1.12). Fark ~%0.2, vergiyi hafif FAZLA gösterir. E1'de teyit. · is_purchasable false (B2 karari): OTV'si yok, ana akista secilemez. Sadece KDV'li bir urun secilip \"Bunun 0/az TL'si vergiydi\" diyen gorsel uretilmesi istismar kapisiydi (PRD §8 itibar zirhi). Hayal listesinde (is_spendable) vergisiz fiyatiyla gorunmeye devam ediyor.",
     "tax_formula": {
       "type": "chain",
       "components": [
-        { "key": "konaklama", "label": "Konaklama Vergisi", "rate": 0.02 },
-        { "key": "kdv", "label": "KDV", "rate": 0.1 }
+        {
+          "key": "konaklama",
+          "label": "Konaklama Vergisi",
+          "rate": 0.02
+        },
+        {
+          "key": "kdv",
+          "label": "KDV",
+          "rate": 0.1
+        }
       ]
-    }
+    },
+    "is_purchasable": false
   },
   {
     "slug": "saglik",
@@ -163,8 +254,16 @@
     "verified": false,
     "tax_formula": {
       "type": "chain",
-      "components": [{ "key": "kdv", "label": "KDV", "rate": 0.1 }]
-    }
+      "components": [
+        {
+          "key": "kdv",
+          "label": "KDV",
+          "rate": 0.1
+        }
+      ]
+    },
+    "is_purchasable": false,
+    "e1_note": "is_purchasable false (B2 karari): OTV'si yok, ana akista secilemez. Sadece KDV'li bir urun secilip \"Bunun 0/az TL'si vergiydi\" diyen gorsel uretilmesi istismar kapisiydi (PRD §8 itibar zirhi). Hayal listesinde (is_spendable) vergisiz fiyatiyla gorunmeye devam ediyor."
   },
   {
     "slug": "egitim",
@@ -172,11 +271,18 @@
     "emoji": "🎓",
     "sort_order": 120,
     "verified": false,
-    "e1_note": "PRD §4.4 '%10/%20' diyor. Belirsizlikte DÜŞÜK oran seçildi (vergi az görünür). E1'de teyit.",
+    "e1_note": "PRD §4.4 '%10/%20' diyor. Belirsizlikte DÜŞÜK oran seçildi (vergi az görünür). E1'de teyit. · is_purchasable false (B2 karari): OTV'si yok, ana akista secilemez. Sadece KDV'li bir urun secilip \"Bunun 0/az TL'si vergiydi\" diyen gorsel uretilmesi istismar kapisiydi (PRD §8 itibar zirhi). Hayal listesinde (is_spendable) vergisiz fiyatiyla gorunmeye devam ediyor.",
     "tax_formula": {
       "type": "chain",
-      "components": [{ "key": "kdv", "label": "KDV", "rate": 0.1 }]
-    }
+      "components": [
+        {
+          "key": "kdv",
+          "label": "KDV",
+          "rate": 0.1
+        }
+      ]
+    },
+    "is_purchasable": false
   },
   {
     "slug": "oyuncak",
@@ -186,8 +292,16 @@
     "verified": false,
     "tax_formula": {
       "type": "chain",
-      "components": [{ "key": "kdv", "label": "KDV", "rate": 0.2 }]
-    }
+      "components": [
+        {
+          "key": "kdv",
+          "label": "KDV",
+          "rate": 0.2
+        }
+      ]
+    },
+    "is_purchasable": false,
+    "e1_note": "is_purchasable false (B2 karari): OTV'si yok, ana akista secilemez. Sadece KDV'li bir urun secilip \"Bunun 0/az TL'si vergiydi\" diyen gorsel uretilmesi istismar kapisiydi (PRD §8 itibar zirhi). Hayal listesinde (is_spendable) vergisiz fiyatiyla gorunmeye devam ediyor."
   },
   {
     "slug": "bagis",
@@ -197,6 +311,8 @@
     "is_purchasable": false,
     "verified": true,
     "e1_note": "Vergi yok, 1:1 geçer (PRD §4.4). Teyide gerek yok. is_purchasable false: bağış 'aldığın şey' değil, yalnızca hayal döngüsünde harcanır.",
-    "tax_formula": { "type": "none" }
+    "tax_formula": {
+      "type": "none"
+    }
   }
 ]

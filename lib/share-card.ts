@@ -22,9 +22,48 @@ export type ShareCardData = {
   product: { name: string; emoji: string }
   retailPrice: number
   totalTax: number
+  /**
+   * Bu ÜRÜNDE gerçekten olan vergilerin adları, gösterim sırasıyla.
+   * Üründen ürüne DEĞİŞİR: beyaz eşyada TRT payı yok, kitapta hiçbiri yok.
+   * Sabit yazılamaz — olmayan vergiyi göstermek "vergiyi şişirmek" olur (PRD §8).
+   * Kaynak: lib/tax.ts → TaxResult.lines[].label
+   */
+  taxComponents: string[]
   items: WishItem[]
   /** Hayal döngüsü sonunda cepte kalan (docs/03 §3 Zone E). 0 ise satır çizilmez. */
   remaining: number
+}
+
+/**
+ * lib/tax.ts sonucunu ShareCard'ın taxComponents alanına çevirir.
+ *
+ * Sıra TUTARA göre, büyükten küçüğe — zincir sırasına göre değil. Telefonda bu
+ * "ÖTV + KDV + TRT payı + Bakanlık fonu" verir (zincir sırası bandrol'ü öne alırdı).
+ * İlke: en ağır kalem önce okunsun. 0 TL'lik kalem hiç yazılmaz.
+ */
+export function taxComponentLabels(lines: Array<{ label: string; amount: number }>): string[] {
+  return lines
+    .filter((line) => line.amount > 0)
+    .slice()
+    .sort((a, b) => b.amount - a.amount)
+    .map((line) => line.label)
+}
+
+/**
+ * Türkçe geçmiş zaman ek fiili: "…Bakanlık fonuydu", "…KDV'ydi".
+ * Son ünlüye göre uyum; kısaltmalar okunuşlarıyla ele alınır (KDV = "kadeve" → -ydi).
+ */
+export function pastCopula(word: string): string {
+  const ABBREVIATION_VOWEL: Record<string, string> = { KDV: 'e', ÖTV: 'e', TRT: 'e' }
+  const isAbbreviation = word in ABBREVIATION_VOWEL
+
+  const vowel =
+    ABBREVIATION_VOWEL[word] ??
+    Array.from(word.toLowerCase()).reverse().find((c) => 'aeıioöuü'.includes(c)) ??
+    'i'
+
+  const suffix = 'aı'.includes(vowel) ? 'ydı' : 'ei'.includes(vowel) ? 'ydi' : 'ou'.includes(vowel) ? 'ydu' : 'ydü'
+  return isAbbreviation ? `'${suffix}` : suffix
 }
 
 /**

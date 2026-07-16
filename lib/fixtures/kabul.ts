@@ -11,7 +11,14 @@ export const KABUL_SENARYOSU: ShareCardData = {
   product: { name: 'iPhone 17', emoji: '📱' },
   retailPrice: 119000,
   totalTax: 59400,
-  remaining: 340,
+  // Telefonun gerçek bileşenleri, tutara göre (taxComponentLabels'ın üreteceği sıra).
+  // Bandrol+fon tek kalem: PRD §4.2 formülü toplamalı, ayırmak vergiyi %0.1 şişirirdi.
+  taxComponents: ['ÖTV', 'KDV', 'TRT payı + Bakanlık fonu'],
+  // docs/03 §7 "kalan 340 TL" diyor ama listedeki 6 kalem 39.400 TL tutuyor:
+  // 59.400 − 39.400 = 20.000. Dokümanın aritmetiği kendi içinde tutarsız.
+  // Doğru olanı yazdım; ayrıca telefonun vergisiz fiyatı 58.505 TL, yani ödenen
+  // vergiyle ikinci bir telefon alınabiliyor — hayal döngüsü için gerçek bir senaryo.
+  remaining: 20000,
   items: [
     {
       emoji: '🥣',
