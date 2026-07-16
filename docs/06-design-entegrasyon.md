@@ -43,8 +43,11 @@ Kaynak: `tokens/colors.css` — tam skala orada; çekirdek:
 Tipografi: Nunito (display, 800/900 ağırlık) + DM Sans (UI ve TÜM rakamlar,
 `font-variant-numeric: tabular-nums`). Radius: kart 20px, sheet 28px, buton/chip pill.
 Gölge: lacivert tonlu (`rgba(30,42,74,…)`), asla gri. Motion: count-up 1400ms ease-out,
-✨ spring pop (konfeti yasak). Sayı formatı: `₺59.400` (₺ önde — DS kuralı, 03'teki
-"59.400 TL" yazımını geçersiz kılar; tutarlılık için her yerde ₺ önde).
+✨ spring pop (konfeti yasak). Sayı formatı: **`59.400 TL` (TL sonda, ₺ sembolü
+kullanılmaz)** — R6 revizyonu (B2, kabul görseli üzerinde karar). Gerekçe: "X lira
+verdim" halk dili; ₺ önde yazım fintech soğukluğu verir, kimse story'sinde öyle yazmaz.
+Bu, DS readme'nin "₺ önde" kuralını ve bu dokümanın v1.0'daki "₺59.400" yazımını
+geçersiz kılar. UI dahil her yerde tutarlı: `lib/share-card.ts` formatTL tek kaynak.
 
 Büyük harf kuralı: duygusal copy ALL CAPS olmaz → 03 §3'teki "ŞUNLAR DA BENİM
 OLABİLİRDİ" → **"Şunlar da benim olabilirdi ✨"** (dalgalı alt çizgi 'olabilirdi'

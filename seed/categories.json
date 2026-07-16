@@ -11,7 +11,8 @@
       "components": [
         {
           "key": "bandrol_fon",
-          "label": "TRT payı + Bakanlık fonu",
+          "label": "TRT Bandrolü + Kültür Fonu",
+          "short_label": "TRT payı + fon",
           "rate": 0.13
         },
         {

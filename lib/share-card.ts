@@ -5,7 +5,7 @@
  * Bu dosya da saf TypeScript — hem client (html-to-image) hem edge (@vercel/og) kullanır.
  */
 
-export type ShareCardFormat = 'story' | 'post' | 'og'
+export type ShareCardFormat = 'story' | 'post' | 'square' | 'og'
 
 export type WishItem = {
   emoji: string
@@ -26,9 +26,14 @@ export type ShareCardData = {
    * Bu ÜRÜNDE gerçekten olan vergilerin adları, gösterim sırasıyla.
    * Üründen ürüne DEĞİŞİR: beyaz eşyada TRT payı yok, kitapta hiçbiri yok.
    * Sabit yazılamaz — olmayan vergiyi göstermek "vergiyi şişirmek" olur (PRD §8).
-   * Kaynak: lib/tax.ts → TaxResult.lines[].label
+   * Kaynak: lib/tax.ts → taxComponentLabels(result.lines)
    */
   taxComponents: string[]
+  /**
+   * Persona satırı (docs/07 §5 p4). "Oysa ben maaşımdan %27'ye varan…" — tam cümle
+   * DB'den (personas.image_line) gelir, interpolasyon yok. Boş/undefined ise p4 basılmaz.
+   */
+  personaLine?: string
   items: WishItem[]
   /** Hayal döngüsü sonunda cepte kalan (docs/03 §3 Zone E). 0 ise satır çizilmez. */
   remaining: number
@@ -41,42 +46,58 @@ export type ShareCardData = {
  * "ÖTV + KDV + TRT payı + Bakanlık fonu" verir (zincir sırası bandrol'ü öne alırdı).
  * İlke: en ağır kalem önce okunsun. 0 TL'lik kalem hiç yazılmaz.
  */
-export function taxComponentLabels(lines: Array<{ label: string; amount: number }>): string[] {
+export function taxComponentLabels(
+  lines: Array<{ label: string; shortLabel?: string; amount: number }>
+): string[] {
   return lines
     .filter((line) => line.amount > 0)
     .slice()
     .sort((a, b) => b.amount - a.amount)
-    .map((line) => line.label)
+    .map((line) => line.shortLabel ?? line.label) // docs/07 §4: kısa ad varsa o
 }
 
 /**
- * Türkçe geçmiş zaman ek fiili: "…Bakanlık fonuydu", "…KDV'ydi".
- * Son ünlüye göre uyum; kısaltmalar okunuşlarıyla ele alınır (KDV = "kadeve" → -ydi).
+ * Türkçe geçmiş zaman ek fiili "-(y)DI". Kelimenin bitişine göre:
+ *   ünlüyle biter → y kaynaştırma: "fonu" → "fonuydu", "Vergisi" → "Vergisiydi"
+ *   ünsüzle biter → kaynaştırma yok, sert ünsüzden sonra d→t: "fon" → "fondu", "kitap" → "kitaptı"
+ * Kısaltmalar okunuşlarıyla (ünlü biter): "KDV" → "KDV'ydi", "ÖTV" → "ÖTV'ydi".
  */
 export function pastCopula(word: string): string {
-  const ABBREVIATION_VOWEL: Record<string, string> = { KDV: 'e', ÖTV: 'e', TRT: 'e' }
-  const isAbbreviation = word in ABBREVIATION_VOWEL
+  const ABBREVIATIONS: Record<string, string> = { KDV: 'e', ÖTV: 'e', TRT: 'e' }
+  const isAbbreviation = word in ABBREVIATIONS
 
-  const vowel =
-    ABBREVIATION_VOWEL[word] ??
+  const lastVowel =
+    ABBREVIATIONS[word] ??
     Array.from(word.toLowerCase()).reverse().find((c) => 'aeıioöuü'.includes(c)) ??
     'i'
+  const harmony = 'aı'.includes(lastVowel)
+    ? 'ı'
+    : 'ei'.includes(lastVowel)
+      ? 'i'
+      : 'ou'.includes(lastVowel)
+        ? 'u'
+        : 'ü'
 
-  const suffix = 'aı'.includes(vowel) ? 'ydı' : 'ei'.includes(vowel) ? 'ydi' : 'ou'.includes(vowel) ? 'ydu' : 'ydü'
-  return isAbbreviation ? `'${suffix}` : suffix
+  const lastChar = word.trim().slice(-1).toLowerCase()
+  const endsWithVowel = isAbbreviation || 'aeıioöuü'.includes(lastChar)
+
+  const glide = endsWithVowel ? 'y' : ''
+  const stop = !endsWithVowel && 'çfhkpsşt'.includes(lastChar) ? 't' : 'd' // sert ünsüz sonrası d→t
+  return `${isAbbreviation ? "'" : ''}${glide}${stop}${harmony}`
 }
 
 /**
- * docs/03 §1. Post 1080×1080 — tasarım sistemi 1080×1350 (4:5) öneriyor ama
- * çelişkide docs kazanıyor (CLAUDE.md). 4:5'e geçilecekse tek sayı değişir.
+ * Format seti docs/06 §3 finali: story · post 4:5 · kare 1:1 · og.
+ * Üçü de 1080 geniş → aynı fizik punto; kare ve og daha az yükseklik için ölçeklenir.
  */
 export const FORMATS: Record<
   ShareCardFormat,
-  { w: number; h: number; label: string; maxRows: number }
+  { w: number; h: number; label: string; ratio: string; maxRows: number }
 > = {
-  story: { w: 1080, h: 1920, label: 'Story', maxRows: 7 },
-  post: { w: 1080, h: 1080, label: 'Post', maxRows: 5 },
-  og: { w: 1200, h: 630, label: 'Link önizleme', maxRows: 3 },
+  story: { w: 1080, h: 1920, label: 'Story', ratio: '9:16', maxRows: 7 },
+  post: { w: 1080, h: 1350, label: 'Post', ratio: '4:5', maxRows: 5 },
+  square: { w: 1080, h: 1080, label: 'Kare', ratio: '1:1', maxRows: 4 },
+  og: { w: 1200, h: 630, label: 'Link önizleme', ratio: '1.91:1', maxRows: 3 },
 }
 
 /** docs/03 §4 + CLAUDE.md kural 4: TR locale, binlik nokta, kuruşsuz, 1M üstü kısaltma YOK. */
@@ -101,6 +122,7 @@ export const C = {
   inkSoft: '#5B6F9E', // navy-500
   muted: '#8A99BB', // navy-400
   accent: '#E85D4A', // coral-500
+  accentDeep: '#CE4A38', // coral-600 — destek metni (docs/07 §5 p3 destek)
   chipBg: '#FBE0DB', // coral-100
   chipInk: '#B23D2E', // coral-700
   card: '#FFFFFF',

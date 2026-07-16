@@ -19,12 +19,17 @@ describe('formatTL', () => {
 })
 
 describe('taxComponentLabels', () => {
-  it('tutara göre büyükten küçüğe sıralar, zincir sırasına göre değil', () => {
-    // Telefonun gerçek zinciri: bandrol → ÖTV → KDV. Gösterimde ÖTV önce gelmeli.
+  it('tutara göre büyükten küçüğe sıralar ve short_label kullanır', () => {
+    // Zincir sırası bandrol → ÖTV → KDV; gösterimde ÖTV önce, bandrol short_label ile.
     const TELEFON: TaxFormula = {
       type: 'chain',
       components: [
-        { key: 'bandrol_fon', label: 'TRT payı + Bakanlık fonu', rate: 0.13 },
+        {
+          key: 'bandrol_fon',
+          label: 'TRT Bandrolü + Kültür Fonu',
+          short_label: 'TRT payı + fon',
+          rate: 0.13,
+        },
         {
           key: 'otv',
           label: 'ÖTV',
@@ -39,7 +44,8 @@ describe('taxComponentLabels', () => {
     }
     const result = calculateTax(119000, TELEFON)
 
-    expect(taxComponentLabels(result.lines)).toEqual(['ÖTV', 'KDV', 'TRT payı + Bakanlık fonu'])
+    // short_label varsa o kullanılır (docs/07 §4).
+    expect(taxComponentLabels(result.lines)).toEqual(['ÖTV', 'KDV', 'TRT payı + fon'])
   })
 
   it('vergisiz üründe boş dizi döner (kitap)', () => {
@@ -72,6 +78,12 @@ describe('pastCopula — Türkçe ünlü uyumu', () => {
   it('kısaltmada kesme işaretiyle ve okunuşa göre', () => {
     expect(`KDV${pastCopula('KDV')}`).toBe("KDV'ydi") // "kadeve"
     expect(`ÖTV${pastCopula('ÖTV')}`).toBe("ÖTV'ydi")
+  })
+
+  it('ünsüzle biten kelimede kaynaştırma yok, sertleşme uygulanır', () => {
+    expect(`fon${pastCopula('fon')}`).toBe('fondu') // n yumuşak → d
+    expect(`TRT payı + fon${pastCopula('TRT payı + fon')}`).toBe('TRT payı + fondu')
+    expect(`kitap${pastCopula('kitap')}`).toBe('kitaptı') // p sert → t
   })
 })
 

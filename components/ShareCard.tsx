@@ -1,11 +1,11 @@
 /**
- * ShareCard — projenin asıl çıktısı. Tek bileşen, üç format (docs/03-visual-spec.md).
+ * ShareCard — projenin asıl çıktısı. Tek bileşen, dört format.
+ * Yerleşim/tipografi: docs/07 §5 (kreşendo) · docs/06 §3 · docs/03.
  *
  * SATORI KURALLARI (CLAUDE.md: "ShareCard satori-uyumlu yazılacak"):
- *   - CSS değişkeni YOK. Satori var() çözemez → renkler lib/share-card.ts'ten literal.
- *   - Çok çocuklu her div'de açık `display: flex`. Satori örtük blok yerleşimi yapmaz.
- *   - grid/float YOK, flexbox alt kümesi.
- *   - `flex: 1` yerine flexGrow. Kısayol özellikler güvenilmez.
+ *   - CSS değişkeni YOK. Renkler lib/share-card.ts'ten literal.
+ *   - Çok çocuklu her div'de açık `display: flex`. Örtük blok yerleşimi yok.
+ *   - grid/float YOK; `flex: 1` yerine flexGrow.
  * Aynı bileşen client'ta html-to-image ile PNG'ye, sunucuda @vercel/og ile OG'ye gider.
  */
 import {
@@ -28,17 +28,20 @@ type Props = {
   scale?: number
 }
 
+/** Dikey formatların punto ölçeği (üçü de 1080 geniş; kısalan yükseklik için küçülür). */
+const VSCALE: Record<ShareCardFormat, number> = { story: 1, post: 0.86, square: 0.72, og: 1 }
+
 /**
- * "ÖTV + KDV + TRT payı + Bakanlık fonuydu" — bileşenler VERİDEN gelir, sabit değil.
- * 'vergi' kelimesi bilinçli olarak kullanılmıyor: "vergi vermek istemiyorum" gibi
- * okunabiliyor. Kalemleri saymak hem daha dürüst hem daha güçlü (Oğuzhan, B2).
+ * "ÖTV + KDV + TRT payı + fondu" — bileşenler VERİDEN gelir (docs/07 §4), sabit değil.
+ * 'vergi' kelimesi ana vurguda kullanılmıyor (B2): kalemleri saymak daha dürüst ve güçlü.
+ * Son kaleme Türkçe ek fiili doğru ünlü uyumuyla eklenir.
  */
 function taxComponentsLine(components: string[]): string {
   if (components.length === 0) return 'hiç vergi yoktu'
   return components.join(' + ') + pastCopula(components[components.length - 1])
 }
 
-/** docs/03 §3 Zone C: 'OLABİLİRDİ' altında el çizimi dalgalı çizgi. */
+/** docs/03 §3 Zone C: vurgu kelimesinin altında el çizimi dalgalı çizgi. */
 function WavyUnderline({ width, color }: { width: number; color: string }) {
   const h = Math.max(6, Math.round(width * 0.022))
   return (
@@ -54,11 +57,8 @@ function WavyUnderline({ width, color }: { width: number; color: string }) {
 }
 
 /**
- * "iPhone 17 📱 aldım." — ürün emoji'si cümlenin İÇİNDE, hafif açılı (sticker hissi).
- *
- * docs/03 §3 Zone A emoji'yi ayrı, ortalanmış bir bölge olarak tarif ediyordu; Oğuzhan'ın
- * B2 kararıyla değişti: tek başına ortalanmış emoji 1080px tuvalde etrafındaki boşluk
- * yüzünden küçük duruyordu, cümleye girince aynı piksel boyutu iri okunuyor.
+ * "iPhone 17 📱 aldım." — ürün emoji'si cümlenin içinde, hafif açılı (Oğuzhan, B2).
+ * Tek başına ortalanmış emoji 1080px tuvalde küçük duruyordu; cümlede aynı piksel iri okunur.
  */
 function ProductLine({
   name,
@@ -79,26 +79,90 @@ function ProductLine({
     lineHeight: 1.15,
   }
   return (
-    <div
-      style={{
-        display: 'flex',
-        flexWrap: 'wrap',
-        alignItems: 'center',
-        gap: textSize * 0.2,
-      }}
-    >
+    <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: textSize * 0.2 }}>
       <div style={word}>{name}</div>
-      <div
-        style={{
-          display: 'flex',
-          fontSize: emojiSize,
-          lineHeight: 1,
-          transform: 'rotate(9deg)',
-        }}
-      >
+      <div style={{ display: 'flex', fontSize: emojiSize, lineHeight: 1, transform: 'rotate(9deg)' }}>
         {emoji}
       </div>
       <div style={word}>aldım.</div>
+    </div>
+  )
+}
+
+/**
+ * Kreşendo şok bloğu (docs/07 §5): "Bunun" (destek) → dev rakam (nowrap) → bileşen listesi.
+ * Rakam ASLA satır kırılmaz (R3); sığmazsa punto düşer. Rakam DM Sans tabular (docs/06 §2).
+ */
+function ShockBlock({
+  totalTax,
+  components,
+  s,
+}: {
+  totalTax: number
+  components: string[]
+  s: number
+}) {
+  const numberText = `${formatTL(totalTax)}'si`
+  // nowrap rakam taşmasın diye kabaca punto düşür (metin ölçümü satori/tarayıcıda yok).
+  const numberSize = 150 * s * Math.min(1, 13 / numberText.length)
+  const support: React.CSSProperties = {
+    display: 'flex',
+    fontFamily: FONT_DISPLAY,
+    fontSize: 44 * s,
+    fontWeight: 700,
+    color: C.accentDeep,
+    lineHeight: 1.2,
+  }
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', marginTop: 22 * s }}>
+      <div style={support}>Bunun</div>
+      <div
+        style={{
+          display: 'flex',
+          fontFamily: FONT_UI,
+          fontVariantNumeric: 'tabular-nums',
+          fontSize: numberSize,
+          fontWeight: 800,
+          color: C.accent,
+          letterSpacing: '-0.03em',
+          lineHeight: 1.02,
+          whiteSpace: 'nowrap',
+        }}
+      >
+        {numberText}
+      </div>
+      <div style={{ ...support, marginTop: 6 * s }}>{`${taxComponentsLine(components)} 💸`}</div>
+    </div>
+  )
+}
+
+/** docs/07 §5 kapanış: DS yeşil kutu. kalan < 40 TL → 🥨 (simit parası), değilse 🎈. */
+function PocketBox({ remaining, s }: { remaining: number; s: number }) {
+  const tiny = remaining < 40
+  return (
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 16 * s,
+        background: C.positiveSoft,
+        borderRadius: 28 * s,
+        padding: `${24 * s}px ${30 * s}px`,
+      }}
+    >
+      <div style={{ display: 'flex', fontSize: 46 * s, lineHeight: 1 }}>{tiny ? '🥨' : '🎈'}</div>
+      <div
+        style={{
+          display: 'flex',
+          fontFamily: FONT_DISPLAY,
+          fontSize: 34 * s,
+          fontWeight: 700,
+          color: C.positiveInk,
+          lineHeight: 1.25,
+        }}
+      >
+        {`Cebimde ${formatTL(remaining)} kaldı${tiny ? ' — simit parası' : ''}`}
+      </div>
     </div>
   )
 }
@@ -154,6 +218,7 @@ function WishRow({ item, s }: { item: WishItem; s: number }) {
         style={{
           display: 'flex',
           fontFamily: FONT_UI,
+          fontVariantNumeric: 'tabular-nums',
           fontSize: 34 * s,
           fontWeight: 700,
           color: item.positive ? C.positive : C.ink,
@@ -168,17 +233,6 @@ function WishRow({ item, s }: { item: WishItem; s: number }) {
 export function ShareCard({ format = 'story', data, scale = 1 }: Props) {
   const f = FORMATS[format]
   const { visible, overflow } = fitItems(data.items, format)
-  const isOg = format === 'og'
-
-  // docs/03 §4: Liste kısa ise (3 satır) Zone B/C fontları %10 büyür — görsel boş durmasın.
-  const roomy = !isOg && data.items.length <= 3
-  const s = isOg ? 0.62 : format === 'post' ? 0.82 : 1 // format ölçek katsayısı
-  const hero = s * (roomy ? 1.1 : 1)
-
-  // Şok satırı tek satırda kalmalı: rakam büyüdükçe (1.240.000 gibi) taşmasın diye küçülür.
-  // Kaba ama yeterli — asıl ölçüm satori'de de tarayıcıda da yapılamıyor.
-  const shockText = `Bunun ${formatTL(data.totalTax)}'si`
-  const shockSize = 110 * hero * Math.min(1, 18 / shockText.length)
 
   const shell: React.CSSProperties = {
     width: f.w,
@@ -193,8 +247,8 @@ export function ShareCard({ format = 'story', data, scale = 1 }: Props) {
     transformOrigin: 'top left',
   }
 
-  // ─── OG (1200×630): yatay. Sol = şok, sağ = liste. docs/03 §1 "kompakt versiyon".
-  if (isOg) {
+  // ─── OG (1200×630): yatay, kompakt. Sol = kreşendo, sağ = liste (docs/06 §3 D5).
+  if (format === 'og') {
     return (
       <div style={{ ...shell, flexDirection: 'row', padding: 48 }}>
         <div
@@ -202,61 +256,79 @@ export function ShareCard({ format = 'story', data, scale = 1 }: Props) {
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'center',
-            width: 520,
+            width: 560,
             paddingRight: 40,
           }}
         >
-          <ProductLine name={data.product.name} emoji={data.product.emoji} textSize={32} emojiSize={84} />
+          <ProductLine name={data.product.name} emoji={data.product.emoji} textSize={30} emojiSize={72} />
           <div
             style={{
               display: 'flex',
               fontFamily: FONT_DISPLAY,
-              fontSize: 38,
+              fontSize: 40,
               fontWeight: 800,
               color: C.ink,
-              lineHeight: 1.15,
-              marginTop: 16,
+              lineHeight: 1.1,
+              marginTop: 12,
             }}
           >
             {`${formatTL(data.retailPrice)} ödedim.`}
           </div>
-          <div
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              fontFamily: FONT_DISPLAY,
-              fontWeight: 800,
-              color: C.accent,
-              marginTop: 12,
-              letterSpacing: '-0.025em',
-              lineHeight: 1.06,
-            }}
-          >
-            <div style={{ display: 'flex', fontSize: 60 }}>{`Bunun ${formatTL(data.totalTax)}'si`}</div>
-            <div style={{ display: 'flex', fontSize: 26, lineHeight: 1.25, marginTop: 6 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', marginTop: 10 }}>
+            <div
+              style={{
+                display: 'flex',
+                fontFamily: FONT_UI,
+                fontVariantNumeric: 'tabular-nums',
+                fontSize: 76,
+                fontWeight: 800,
+                color: C.accent,
+                letterSpacing: '-0.03em',
+                lineHeight: 1.02,
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {`Bunun ${formatTL(data.totalTax)}'si`}
+            </div>
+            <div
+              style={{
+                display: 'flex',
+                fontFamily: FONT_DISPLAY,
+                fontSize: 27,
+                fontWeight: 700,
+                color: C.accentDeep,
+                lineHeight: 1.2,
+                marginTop: 4,
+              }}
+            >
               {`${taxComponentsLine(data.taxComponents)} 💸`}
             </div>
           </div>
-          <div style={{ display: 'flex', marginTop: 18 }}>
-            <WavyUnderline width={300} color={C.accent} />
-          </div>
+          {data.personaLine ? (
+            <div
+              style={{
+                display: 'flex',
+                fontFamily: FONT_DISPLAY,
+                fontSize: 24,
+                fontStyle: 'italic',
+                fontWeight: 600,
+                color: C.inkSoft,
+                lineHeight: 1.25,
+                marginTop: 12,
+              }}
+            >
+              {data.personaLine}
+            </div>
+          ) : null}
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', flexGrow: 1, justifyContent: 'center' }}>
-          <div
-            style={{
-              display: 'flex',
-              fontFamily: FONT_DISPLAY,
-              fontSize: 28,
-              fontWeight: 800,
-              marginBottom: 14,
-            }}
-          >
+          <div style={{ display: 'flex', fontFamily: FONT_DISPLAY, fontSize: 28, fontWeight: 800, marginBottom: 14 }}>
             ✨ Şunlar da benim olabilirdi:
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {visible.map((item, i) => (
-              <WishRow key={i} item={item} s={0.62} />
+              <WishRow key={i} item={item} s={0.6} />
             ))}
             {overflow > 0 ? (
               <div style={{ display: 'flex', fontSize: 24, color: C.muted, paddingLeft: 12 }}>
@@ -264,7 +336,7 @@ export function ShareCard({ format = 'story', data, scale = 1 }: Props) {
               </div>
             ) : null}
           </div>
-          <div style={{ display: 'flex', fontSize: 22, fontWeight: 600, color: C.inkSoft, marginTop: 18 }}>
+          <div style={{ display: 'flex', fontSize: 22, fontWeight: 600, color: C.inkSoft, marginTop: 16 }}>
             benimolabilirdi.com
           </div>
         </div>
@@ -272,18 +344,20 @@ export function ShareCard({ format = 'story', data, scale = 1 }: Props) {
     )
   }
 
-  // ─── Story (1080×1920) / Post (1080×1080): dikey, Zone A–F (docs/03 §3)
+  // ─── Story / Post (4:5) / Kare (1:1): dikey kreşendo (docs/07 §5)
+  const s = VSCALE[format]
+  const roomy = data.items.length <= 3 ? 1.08 : 1 // kısa listede üst blok bir tık büyür
+  const hero = s * roomy
+
   return (
-    <div style={{ ...shell, padding: `${72 * s}px ${56 * s}px ${44 * s}px` }}>
-      {/* Zone A+B — hikâye (emoji artık cümlenin içinde, ayrı bölge değil) */}
+    <div style={{ ...shell, padding: `${64 * s}px ${56 * s}px ${44 * s}px` }}>
+      {/* p1–p3 — kreşendo: fısıltı → yükseliş → zirve (mercan) */}
       <div style={{ display: 'flex', flexDirection: 'column' }}>
-        {/* Crescendo: sakin giriş → tansiyon yükselir → feryat.
-            Boyut ve ağırlık basamak basamak çıkar: 52 → 64 → 88. */}
         <ProductLine
           name={data.product.name}
           emoji={data.product.emoji}
-          textSize={52 * hero}
-          emojiSize={130 * hero}
+          textSize={44 * hero}
+          emojiSize={118 * hero}
         />
         <div
           style={{
@@ -292,62 +366,54 @@ export function ShareCard({ format = 'story', data, scale = 1 }: Props) {
             fontSize: 64 * hero,
             fontWeight: 800,
             color: C.ink,
-            lineHeight: 1.15,
+            lineHeight: 1.12,
             letterSpacing: '-0.01em',
-            marginTop: 30 * s,
+            marginTop: 26 * s,
           }}
         >
           {`${formatTL(data.retailPrice)} ödedim.`}
         </div>
+        <ShockBlock totalTax={data.totalTax} components={data.taxComponents} s={hero} />
+      </div>
+
+      {/* p4 — persona (buruk iç ses, zirveden sonra). Yoksa hiç basılmaz (docs/07 §1). */}
+      {data.personaLine ? (
         <div
           style={{
             display: 'flex',
-            flexDirection: 'column',
             fontFamily: FONT_DISPLAY,
-            fontWeight: 800,
-            color: C.accent,
-            letterSpacing: '-0.025em',
-            lineHeight: 1.06,
-            marginTop: 24 * s,
+            fontSize: 40 * s,
+            fontStyle: 'italic',
+            fontWeight: 600,
+            color: C.inkSoft,
+            lineHeight: 1.3,
+            marginTop: 26 * s,
           }}
         >
-          <div style={{ display: 'flex', fontSize: shockSize }}>
-            {`Bunun ${formatTL(data.totalTax)}'si`}
-          </div>
-          <div style={{ display: 'flex', fontSize: 44 * hero, lineHeight: 1.2, marginTop: 8 * s }}>
-            {`${taxComponentsLine(data.taxComponents)} 💸`}
-          </div>
+          {data.personaLine}
         </div>
-      </div>
+      ) : null}
 
-      {/* Zone C — geçiş. "Vergimi zaten veriyorum" duruşu kasıtlı: proje vergi karşıtı
-          değil, gizli yüke dikkat çekiyor (PRD §8 siyasi tarafsızlık). */}
-      <div style={{ display: 'flex', flexDirection: 'column', marginTop: 40 * s }}>
-        <div style={{ display: 'flex', fontSize: 36 * hero, color: C.inkSoft, lineHeight: 1.3 }}>
-          Ben zaten vergimi veriyorum.
-        </div>
-        <div style={{ display: 'flex', fontSize: 36 * hero, color: C.inkSoft, lineHeight: 1.3 }}>
-          Bu yan vergiler olmasaydı…
-        </div>
+      {/* p5 — liste başlığı + dalgalı çizgi */}
+      <div style={{ display: 'flex', flexDirection: 'column', marginTop: 32 * s }}>
         <div
           style={{
             display: 'flex',
             fontFamily: FONT_DISPLAY,
             fontSize: 48 * hero,
             fontWeight: 800,
-            marginTop: 8 * s,
             lineHeight: 1.2,
           }}
         >
           ✨ Şunlar da benim olabilirdi:
         </div>
         <div style={{ display: 'flex', marginTop: 2 * s }}>
-          <WavyUnderline width={360 * s} color={C.accent} />
+          <WavyUnderline width={380 * s} color={C.accent} />
         </div>
       </div>
 
-      {/* Zone D — hayal listesi */}
-      <div style={{ display: 'flex', flexDirection: 'column', flexGrow: 1, gap: 14 * s, marginTop: 28 * s }}>
+      {/* hayal listesi */}
+      <div style={{ display: 'flex', flexDirection: 'column', flexGrow: 1, gap: 14 * s, marginTop: 26 * s }}>
         {visible.map((item, i) => (
           <WishRow key={i} item={item} s={s} />
         ))}
@@ -358,36 +424,20 @@ export function ShareCard({ format = 'story', data, scale = 1 }: Props) {
         ) : null}
       </div>
 
-      {/* Zone E — kalan */}
+      {/* kalan — yeşil kutu */}
       {data.remaining > 0 ? (
-        <div
-          style={{
-            display: 'flex',
-            fontSize: 30 * s,
-            fontStyle: 'italic',
-            color: C.inkSoft,
-            marginTop: 18 * s,
-          }}
-        >
-          {`…ve cebimde hâlâ ${formatTL(data.remaining)} kalırdı 🥲`}
+        <div style={{ display: 'flex', marginTop: 18 * s }}>
+          <PocketBox remaining={data.remaining} s={s} />
         </div>
       ) : null}
 
-      {/* Zone F — footer. Dipnot PRD §8 gereği ZORUNLU, her görselde. */}
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: 22 * s }}>
-        <div style={{ display: 'flex', width: '100%', height: 1, background: C.hairline, marginBottom: 18 * s }} />
+      {/* footer — dipnot PRD §8 gereği her görselde zorunlu */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: 20 * s }}>
+        <div style={{ display: 'flex', width: '100%', height: 1, background: C.hairline, marginBottom: 16 * s }} />
         <div style={{ display: 'flex', fontSize: 34 * s, fontWeight: 600, color: C.ink }}>
           benimolabilirdi.com
         </div>
-        <div
-          style={{
-            display: 'flex',
-            fontSize: 21 * s,
-            color: C.muted,
-            marginTop: 8 * s,
-            textAlign: 'center',
-          }}
-        >
+        <div style={{ display: 'flex', fontSize: 21 * s, color: C.muted, marginTop: 8 * s, textAlign: 'center' }}>
           fiyatlar temsilidir · ÖTV+KDV+fon dahil · hesap detayı sitede
         </div>
       </div>

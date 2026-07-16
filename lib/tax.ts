@@ -25,9 +25,15 @@ export type TaxTier = {
   rate: number
 }
 
-export type RateComponent = { key: string; label: string; rate: number }
-export type TieredComponent = { key: string; label: string; tiers: TaxTier[] }
-export type FixedComponent = { key: string; label: string; amount_per_unit: number }
+/** short_label: görselde kullanılan kısa ad (docs/07 §4). Yoksa label kullanılır. */
+export type RateComponent = { key: string; label: string; short_label?: string; rate: number }
+export type TieredComponent = { key: string; label: string; short_label?: string; tiers: TaxTier[] }
+export type FixedComponent = {
+  key: string
+  label: string
+  short_label?: string
+  amount_per_unit: number
+}
 
 export type ChainComponent = RateComponent | TieredComponent
 export type FixedChainComponent = RateComponent | FixedComponent
@@ -37,7 +43,10 @@ export type TaxFormula =
   | { type: 'none' }
   | { type: 'fixed_per_unit'; unit: string; components: FixedChainComponent[] }
 
-export type TaxLine = { key: string; label: string; amount: number }
+export type TaxLine = { key: string; label: string; shortLabel?: string; amount: number }
+
+/** İç hesap satırı — assemble() öncesi ham TL tutarlarıyla. */
+type RawLine = { key: string; label: string; shortLabel?: string; amount: number }
 
 export type TaxResult = {
   /** Girilen raf fiyatı (kuruşa yuvarlanmış). */
@@ -112,6 +121,7 @@ export function assertValidFormula(formula: TaxFormula): void {
       )
     }
     for (const c of formula.components) {
+      assertOptionalShortLabel(c)
       if (isTiered(c)) assertValidTiers(c)
       else assertRate(c.rate, `${c.key}.rate`)
     }
@@ -123,6 +133,7 @@ export function assertValidFormula(formula: TaxFormula): void {
       throw new TypeError('fixed_per_unit formülünde components dizi olmalı')
     }
     for (const c of formula.components) {
+      assertOptionalShortLabel(c)
       if (isFixedAmount(c)) assertRate(c.amount_per_unit, `${c.key}.amount_per_unit`)
       else assertRate(c.rate, `${c.key}.rate`)
     }
@@ -130,6 +141,12 @@ export function assertValidFormula(formula: TaxFormula): void {
   }
 
   throw new TypeError(`Bilinmeyen tax_formula tipi: ${String((formula as { type: unknown }).type)}`)
+}
+
+function assertOptionalShortLabel(c: { key: string; short_label?: unknown }): void {
+  if (c.short_label !== undefined && typeof c.short_label !== 'string') {
+    throw new TypeError(`${c.key}.short_label string olmalı, alınan: ${typeof c.short_label}`)
+  }
 }
 
 function assertValidTiers(component: TieredComponent): void {
@@ -180,7 +197,7 @@ export function calculateTax(
   const notes: string[] = []
 
   let matrah: number
-  let rawLines: Array<{ key: string; label: string; amount: number }>
+  let rawLines: Array<RawLine>
 
   if (formula.type === 'none' || formula.components.length === 0) {
     // Kitap (%0) ve bağış: vergisiz fiyat = raf fiyatı. Dürüstlük göstergesi (PRD §4.4).
@@ -206,7 +223,7 @@ export function calculateTax(
 
 type ChainSolution = {
   matrah: number
-  lines: Array<{ key: string; label: string; amount: number }>
+  lines: Array<RawLine>
   notes: string[]
 }
 
@@ -321,12 +338,12 @@ function forwardChain(
   matrah: number,
   components: ChainComponent[],
   rates: number[]
-): Array<{ key: string; label: string; amount: number }> {
+): Array<RawLine> {
   let running = matrah
   return components.map((component, i) => {
     const amount = running * rates[i]
     running += amount
-    return { key: component.key, label: component.label, amount }
+    return { key: component.key, label: component.label, shortLabel: component.short_label, amount }
   })
 }
 
@@ -338,7 +355,7 @@ function solveFixedPerUnit(
   retail: number,
   formula: { type: 'fixed_per_unit'; unit: string; components: FixedChainComponent[] },
   options: TaxOptions
-): { matrah: number; lines: Array<{ key: string; label: string; amount: number }> } {
+): { matrah: number; lines: Array<RawLine> } {
   const { quantity } = options
   assertPositiveFinite(quantity, `quantity (${formula.unit})`)
 
@@ -369,7 +386,12 @@ function solveFixedPerUnit(
       ? component.amount_per_unit
       : running * component.rate
     running += amount
-    return { key: component.key, label: component.label, amount: amount * quantity }
+    return {
+      key: component.key,
+      label: component.label,
+      shortLabel: component.short_label,
+      amount: amount * quantity,
+    }
   })
 
   return { matrah: matrahPerUnit * quantity, lines }
@@ -386,7 +408,7 @@ function solveFixedPerUnit(
 function assemble(
   retailK: number,
   matrah: number,
-  rawLines: Array<{ key: string; label: string; amount: number }>,
+  rawLines: Array<RawLine>,
   notes: string[]
 ): TaxResult {
   const taxFreeK = toKurus(matrah)
@@ -407,6 +429,7 @@ function assemble(
   const lines: TaxLine[] = rawLines.map((line, i) => ({
     key: line.key,
     label: line.label,
+    shortLabel: line.shortLabel,
     amount: toTL(lineKurus[i]),
   }))
 
