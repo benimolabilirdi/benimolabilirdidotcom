@@ -243,8 +243,8 @@ export function ShareCard({ format = 'story', data, scale = 1 }: Props) {
     color: C.ink,
     fontFamily: FONT_UI,
     overflow: 'hidden',
-    transform: scale === 1 ? undefined : `scale(${scale})`,
-    transformOrigin: 'top left',
+    // transform anahtarını scale=1'de HİÇ ekleme: satori `transform: undefined`'da patlıyor.
+    ...(scale === 1 ? {} : { transform: `scale(${scale})`, transformOrigin: 'top left' }),
   }
 
   // ─── OG (1200×630): yatay, kompakt. Sol = kreşendo, sağ = liste (docs/06 §3 D5).
