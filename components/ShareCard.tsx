@@ -256,8 +256,9 @@ export function ShareCard({ format = 'story', data, scale = 1 }: Props) {
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'center',
-            width: 560,
-            paddingRight: 40,
+            width: 540,
+            flexShrink: 0,
+            paddingRight: 36,
           }}
         >
           <ProductLine name={data.product.name} emoji={data.product.emoji} textSize={30} emojiSize={72} />
@@ -265,7 +266,7 @@ export function ShareCard({ format = 'story', data, scale = 1 }: Props) {
             style={{
               display: 'flex',
               fontFamily: FONT_DISPLAY,
-              fontSize: 40,
+              fontSize: 38,
               fontWeight: 800,
               color: C.ink,
               lineHeight: 1.1,
@@ -275,12 +276,18 @@ export function ShareCard({ format = 'story', data, scale = 1 }: Props) {
             {`${formatTL(data.retailPrice)} ödedim.`}
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', marginTop: 10 }}>
+            {/* "Bunun" ayrı küçük satır; büyük rakam tek başına → 540px kolona sığar */}
+            <div
+              style={{ display: 'flex', fontFamily: FONT_DISPLAY, fontSize: 27, fontWeight: 700, color: C.accentDeep }}
+            >
+              Bunun
+            </div>
             <div
               style={{
                 display: 'flex',
                 fontFamily: FONT_UI,
                 fontVariantNumeric: 'tabular-nums',
-                fontSize: 76,
+                fontSize: 72 * Math.min(1, 12 / `${formatTL(data.totalTax)}'si`.length),
                 fontWeight: 800,
                 color: C.accent,
                 letterSpacing: '-0.03em',
@@ -288,7 +295,7 @@ export function ShareCard({ format = 'story', data, scale = 1 }: Props) {
                 whiteSpace: 'nowrap',
               }}
             >
-              {`Bunun ${formatTL(data.totalTax)}'si`}
+              {`${formatTL(data.totalTax)}'si`}
             </div>
             <div
               style={{
