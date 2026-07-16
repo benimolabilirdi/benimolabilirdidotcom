@@ -12,7 +12,13 @@
 // Tipler
 // ---------------------------------------------------------------------------
 
-/** ÖTV gibi matraha göre kademelenen bileşenin tek kademesi. Son kademe: max_matrah null. */
+/**
+ * ÖTV gibi matraha göre kademelenen bileşenin tek kademesi. Son kademe: max_matrah null.
+ *
+ * VARSAYIM: eşik, zincirin başındaki çıplak matraha uygulanır — yani bandrol/fon HARİÇ
+ * (docs/02 §2'nin literal okuması). Gerçek mevzuatta ÖTV matrahı bandrol dahil tutar
+ * olabilir; E1'de teyit edilecek. Tersi çıkarsa isWithinTier'e tek çarpan eklemek yeter.
+ */
 export type TaxTier = {
   /** Kademenin üst sınırı (dahil). Son kademede null = sınırsız. */
   max_matrah: number | null
@@ -245,8 +251,8 @@ function solveChain(retail: number, components: ChainComponent[]): ChainSolution
     }
   }
 
-  // Hiçbir kademe tutarlı değil → kademe sıçraması yüzünden erişilemeyen raf fiyatı bandı.
-  return pinToTierBoundary(retail, components, tieredIndex, tiered, candidates)
+  // Hiçbir kademe tutarlı değil → kademe geçiş bandı.
+  return solveGapWithLowerTier(retail, components, tiered, candidates)
 }
 
 /**
@@ -259,45 +265,40 @@ function isWithinTier({ matrah, lower, upper }: TierCandidate): boolean {
 }
 
 /**
- * Kademeli oran matrahta sıçradığı için raf fiyatı da sıçrar: iki kademe arasında
- * hiçbir matrahın üretemediği bir raf fiyatı bandı kalır. Böyle bir fiyat gelirse
- * matrah eşiğe sabitlenir — toplam vergi (raf − eşik) yine kesindir, tutmayan fark
- * sıçramanın kaynağı olan kademeli bileşene (ÖTV) yazılır.
+ * Kademe geçiş bandı: oran matrahta sıçradığı için raf fiyatı da sıçrar ve iki kademe
+ * arasında hiçbir matrahın "tutarlı" üretemediği bir bant kalır. Bu bant gerçek hayatta
+ * doludur — modelimiz raf = matrah × vergiler varsayıyor, gerçekte araya bayi marjı ve
+ * iskonto giriyor. Özellikle otomobilde (eşikler büyük, liste fiyatları eşik civarına
+ * kümelenir) bu yola sık düşülecek, yani hata fırlatmak seçenek değil.
+ *
+ * Çözüm: alt kademenin oranlarıyla düz ters hesap. Matrah kademe tavanını biraz aşar
+ * ama aritmetik kusursuzdur (ileri zincir raf fiyatını yeniden üretir) ve vergi
+ * MUHAFAZAKÂR tarafta kalır. Yön önemli: bu projede hesap didiklendiğinde "vergiyi
+ * şişirmişler" denebilmemeli; "az bile göstermişler" denebilmeli.
  */
-function pinToTierBoundary(
+function solveGapWithLowerTier(
   retail: number,
   components: ChainComponent[],
-  tieredIndex: number,
   tiered: TieredComponent,
   candidates: TierCandidate[]
 ): ChainSolution {
   for (let i = 0; i < candidates.length - 1; i++) {
-    const current = candidates[i]
-    const next = candidates[i + 1]
+    const lower = candidates[i]
+    const upper = candidates[i + 1]
 
     // Boşluk tam burada: bu kademe kendi tavanını aşıyor, sonraki ise tabanın altında kalıyor.
-    const overshoots = toKurus(current.matrah) > toKurus(current.upper)
-    const nextUndershoots = toKurus(next.matrah) <= toKurus(current.upper)
+    const overshoots = toKurus(lower.matrah) > toKurus(lower.upper)
+    const nextUndershoots = toKurus(upper.matrah) <= toKurus(lower.upper)
     if (!overshoots || !nextUndershoots) continue
 
-    // Eşik, üst sınırı dahil olan kademeye aittir → o kademenin oranlarıyla yürütülür.
-    const boundary = current.upper
-    const lines = forwardChain(boundary, components, current.rates)
-    const accountedTax = lines.reduce((sum, line) => sum + line.amount, 0)
-    const residual = retail - boundary - accountedTax
-
-    lines[tieredIndex] = {
-      ...lines[tieredIndex],
-      amount: lines[tieredIndex].amount + residual,
-    }
-
+    const tierRate = tiered.tiers[i].rate
     return {
-      matrah: boundary,
-      lines,
+      matrah: lower.matrah,
+      lines: forwardChain(lower.matrah, components, lower.rates),
       notes: [
-        `${tiered.label} kademe eşiği: bu raf fiyatı bandında tutarlı çözüm yok ` +
-          `(oran sıçraması). Matrah ${boundary} TL eşiğine sabitlendi, fark ${tiered.label} ` +
-          `satırına yazıldı.`,
+        `${tiered.label} kademe geçiş bandı: bu raf fiyatını hiçbir kademe tutarlı ` +
+          `üretmiyor (oran sıçraması). Alt kademe oranı (%${(tierRate * 100).toFixed(0)}) ` +
+          `uygulandı — muhafazakâr hesap, vergi olduğundan fazla gösterilmez.`,
       ],
     }
   }

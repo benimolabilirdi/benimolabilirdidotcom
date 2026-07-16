@@ -45,11 +45,18 @@ const M_TIER1 = 1.13 * 1.25 * 1.2 // 1.695
 const M_TIER2 = 1.13 * 1.4 * 1.2 // 1.8984
 const M_TIER3 = 1.13 * 1.5 * 1.2 // 2.034
 
-/** Her sonuç bu iki değişmezi sağlamak zorunda. */
+/**
+ * Her sonuç bu iki değişmezi sağlamak zorunda. Karşılaştırma KURUŞ cinsinden ve TAM:
+ * garanti edilen şey "yaklaşık eşit" değil, kuruşu kuruşuna eşit. (Float toplamıyla
+ * ölçmek büyük tutarlarda kendi hatasını üretir ve yanlış şeyi test eder.)
+ */
 function expectInvariants(result: ReturnType<typeof calculateTax>) {
-  expect(result.taxFreePrice + result.totalTax).toBeCloseTo(result.retailPrice, 10)
-  const lineSum = result.lines.reduce((sum, line) => sum + line.amount, 0)
-  expect(lineSum).toBeCloseTo(result.totalTax, 10)
+  const kurus = (tl: number) => Math.round(tl * 100)
+
+  expect(kurus(result.taxFreePrice) + kurus(result.totalTax)).toBe(kurus(result.retailPrice))
+
+  const lineSum = result.lines.reduce((sum, line) => sum + kurus(line.amount), 0)
+  expect(lineSum).toBe(kurus(result.totalTax))
 }
 
 describe('kademesiz zincir', () => {
@@ -108,34 +115,103 @@ describe('kademeli ÖTV', () => {
     expectInvariants(result)
   })
 
-  it('erişilemeyen bandda matrahı 640 eşiğine sabitler ve farkı ÖTV\'ye yazar', () => {
+  it('geçiş bandında alt kademe oranıyla muhafazakâr çözer (640 eşiği)', () => {
     // (640×1.695, 640×1.8984] = (1084.80, 1214.98] bandında hiçbir kademe tutarlı değil.
+    // Alt kademe (%25) ile düz ters hesap: 1150 / 1.695 = 678.47 — tavanı aşar, sorun değil.
     const result = calculateTax(1150, TELEFON)
 
-    expect(result.taxFreePrice).toBe(640)
-    expect(result.totalTax).toBe(510)
-    expect(result.breakdown.bandrol_fon).toBeCloseTo(83.2, 2)
-    expect(result.breakdown.otv).toBeCloseTo(246.0, 2) // 180.80 + 65.20 artık
-    expect(result.breakdown.kdv).toBeCloseTo(180.8, 2)
+    expect(result.taxFreePrice).toBe(678.47)
+    expect(result.totalTax).toBe(471.53)
+    expect(result.taxFreePrice).toBeGreaterThan(640) // alt kademe kullanıldı, eşiğe sabitlenmedi
+    expect(result.breakdown.bandrol_fon).toBeCloseTo(88.2, 2)
+    expect(result.breakdown.otv).toBeCloseTo(191.67, 1)
+    expect(result.breakdown.kdv).toBeCloseTo(191.67, 1)
     expect(result.notes).toHaveLength(1)
-    expect(result.notes[0]).toContain('640')
+    expect(result.notes[0]).toContain('muhafazakâr')
     expectInvariants(result)
   })
 
-  it('erişilemeyen bandda matrahı 1500 eşiğine sabitler', () => {
-    // (1500×1.8984, 1500×2.034] = (2847.60, 3051] bandı.
+  it('geçiş bandında alt kademe oranıyla muhafazakâr çözer (1500 eşiği)', () => {
+    // (1500×1.8984, 1500×2.034] = (2847.60, 3051] bandı. Alt kademe %40: 2950 / 1.8984.
     const result = calculateTax(2950, TELEFON)
 
-    expect(result.taxFreePrice).toBe(1500)
-    expect(result.totalTax).toBe(1450)
+    expect(result.taxFreePrice).toBe(1553.94)
+    expect(result.totalTax).toBe(1396.06)
+    expect(result.taxFreePrice).toBeGreaterThan(1500)
     expect(result.notes).toHaveLength(1)
-    expect(result.notes[0]).toContain('1500')
     expectInvariants(result)
   })
 
-  it('boşluk bandının her iki ucunda da değişmezler korunur', () => {
+  it('geçiş bandı çözümü vergiyi ASLA şişirmez (eşiğe sabitlemeden az)', () => {
+    // Eşiğe sabitleseydik vergi (raf − eşik) olurdu. Muhafazakâr çözüm bundan küçük olmalı.
+    for (const [retail, boundary] of [
+      [1150, 640],
+      [1200, 640],
+      [2950, 1500],
+      [3000, 1500],
+    ]) {
+      const result = calculateTax(retail, TELEFON)
+      expect(result.totalTax).toBeLessThan(retail - boundary)
+    }
+  })
+
+  it('geçiş bandının her iki ucunda da değişmezler korunur', () => {
     for (let retail = 1080; retail <= 1220; retail += 0.37) {
       expectInvariants(calculateTax(retail, TELEFON))
+    }
+  })
+})
+
+describe('otomobil ölçeği (geniş kademe eşikleri)', () => {
+  // Temsili tablo — gerçek oranlar E1'de. Amaç: telefonun dar bandında çalışan mantığın
+  // geniş bantta da doğru boşluğu bulduğunu görmek. Üretimde bu yolu asıl otomobil kullanır.
+  const OTOMOBIL: TaxFormula = {
+    type: 'chain',
+    components: [
+      {
+        key: 'otv',
+        label: 'ÖTV',
+        tiers: [
+          { max_matrah: 500_000, rate: 0.45 },
+          { max_matrah: 1_450_000, rate: 0.5 },
+          { max_matrah: null, rate: 0.8 },
+        ],
+      },
+      { key: 'kdv', label: 'KDV', rate: 0.2 },
+    ],
+  }
+
+  it('tutarlı kademede normal çözer', () => {
+    const result = calculateTax(3_500_000, OTOMOBIL) // 3.5M / 2.16 = 1.62M → üst kademe
+    expect(result.taxFreePrice).toBeCloseTo(1_620_370.37, 1)
+    expect(result.notes).toEqual([])
+    expectInvariants(result)
+  })
+
+  it('500.000 eşiğindeki geçiş bandını bulur ve alt kademeyi (%45) uygular', () => {
+    // (500.000×1.74, 500.000×1.80] = (870.000, 900.000] bandı.
+    const result = calculateTax(885_000, OTOMOBIL)
+
+    expect(result.taxFreePrice).toBe(508_620.69) // 885.000 / 1.74
+    expect(result.taxFreePrice).toBeGreaterThan(500_000)
+    expect(result.totalTax).toBeLessThan(885_000 - 500_000) // sabitlemeden muhafazakâr
+    expect(result.notes[0]).toContain('%45')
+    expectInvariants(result)
+  })
+
+  it('1.450.000 eşiğindeki geçiş bandını bulur ve alt kademeyi (%50) uygular', () => {
+    // (1.45M×1.80, 1.45M×2.16] = (2.61M, 3.132M] bandı.
+    const result = calculateTax(2_900_000, OTOMOBIL)
+
+    expect(result.taxFreePrice).toBe(1_611_111.11) // 2.9M / 1.80
+    expect(result.taxFreePrice).toBeGreaterThan(1_450_000)
+    expect(result.notes[0]).toContain('%50')
+    expectInvariants(result)
+  })
+
+  it('geniş bantta değişmezler korunur', () => {
+    for (let retail = 800_000; retail <= 3_200_000; retail += 7_137) {
+      expectInvariants(calculateTax(retail, OTOMOBIL))
     }
   })
 })

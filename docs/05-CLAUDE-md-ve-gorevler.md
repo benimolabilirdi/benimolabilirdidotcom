@@ -72,6 +72,11 @@ Referans dokümanlar: docs/ altında PRD, data-model, visual-spec. ÇELİŞKİDE
 
 ### Faz E — İçerik ve doğrulama (Fable 5 web search — tek yoğun oturum)
 - [ ] E1. ⚠️ Güncel vergi oranlarının teyidi (ÖTV kademeleri, KDV, bandrol %, konaklama vergisi, akaryakıt maktu ÖTV) → tax_formula JSON'ları finalize
+  - [ ] E1a. **Kademe eşiği bandrol dahil mi hariç mi — mevzuattan teyit.** lib/tax.ts şu an
+        docs/02 §2'yi literal okuyup eşiği bandrol HARİÇ çıplak matraha uyguluyor. Gerçek ÖTV
+        matrahı bandrol dahil tutar olabilir (yani eşikler ×1.13'lü tutara). Yalnızca telefonu
+        etkiler (bandrol olan tek kademeli kategori) ve tüm gerçek telefonlar %50 kademesinde
+        olduğu için sonucu değiştirmiyor. Tersi çıkarsa: isWithinTier'e tek çarpan eklemek yeter.
 - [ ] E2. 14 kategori × 8-10 ürün gerçekçi fiyatlarla tam seed CSV
 - [ ] E3. "Nasıl hesaplıyoruz?" sayfası içeriği (kaynak linkli)
 - [ ] E4. Tüm site copy'sinin ton denetimi
