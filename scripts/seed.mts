@@ -300,7 +300,11 @@ console.log(`  ${links.length} etiket bağı kuruldu`)
 const unverified = categories.filter((c) => !c.verified)
 console.log(`\n⚠️  ${unverified.length}/${categories.length} kategorinin oranları TEYİT EDİLMEDİ (E1):`)
 for (const category of unverified) {
-  console.log(`   · ${category.slug}${category.e1_note ? ` — ${category.e1_note.split('.')[0]}.` : ''}`)
+  // Not'u ilk cümleden değil sabit uzunluktan kes: '§4.4' gibi sayılar noktayla bölünüyordu.
+  const note = category.e1_note
+    ? ` — ${category.e1_note.length > 64 ? category.e1_note.slice(0, 64) + '…' : category.e1_note}`
+    : ''
+  console.log(`   · ${category.slug}${note}`)
 }
 
 console.log('\n✓ Seed tamam.\n')
