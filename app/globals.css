@@ -2,26 +2,70 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* Fontlar düz @font-face ile tanımlanıyor, next/font ile DEĞİL: next/font hash'li aile
+   adları üretir (__Nunito_abc123), oysa ShareCard satori uyumu için literal 'Nunito' /
+   'DM Sans' kullanmak zorunda. İsimler tarayıcıda ve satori'de aynı olmalı. */
+@font-face {
+  font-family: 'Nunito';
+  src: url('/fonts/Nunito/static/Nunito-SemiBold.ttf') format('truetype');
+  font-weight: 600;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Nunito';
+  src: url('/fonts/Nunito/static/Nunito-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Nunito';
+  src: url('/fonts/Nunito/static/Nunito-ExtraBold.ttf') format('truetype');
+  font-weight: 800;
+  font-display: swap;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+@font-face {
+  font-family: 'DM Sans';
+  src: url('/fonts/static/DMSans-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'DM Sans';
+  src: url('/fonts/static/DMSans-Italic.ttf') format('truetype');
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'DM Sans';
+  src: url('/fonts/static/DMSans-Medium.ttf') format('truetype');
+  font-weight: 500;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'DM Sans';
+  src: url('/fonts/static/DMSans-SemiBold.ttf') format('truetype');
+  font-weight: 600;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'DM Sans';
+  src: url('/fonts/static/DMSans-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-display: swap;
+}
+
+/* Marka token'ları — .claude/skills/benimolabilirdi-design/tokens/ */
+:root {
+  --bg-page: #faf3e8;
+  --text-body: #1e2a4a;
+  --font-display: 'Nunito', system-ui, sans-serif;
+  --font-ui: 'DM Sans', system-ui, sans-serif;
 }
 
 body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
-}
-
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
+  background: var(--bg-page);
+  color: var(--text-body);
+  font-family: var(--font-ui);
 }

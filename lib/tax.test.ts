@@ -41,9 +41,9 @@ const AKARYAKIT: TaxFormula = {
 }
 
 // Telefon zincirinin kademe çarpanları — sınır testlerinde raf fiyatı üretmek için.
+// (Üst kademe 1.13 × 1.50 × 1.20 = 2.034; testlerde raf fiyatı doğrudan verildiği için sabit gerekmiyor.)
 const M_TIER1 = 1.13 * 1.25 * 1.2 // 1.695
 const M_TIER2 = 1.13 * 1.4 * 1.2 // 1.8984
-const M_TIER3 = 1.13 * 1.5 * 1.2 // 2.034
 
 /**
  * Her sonuç bu iki değişmezi sağlamak zorunda. Karşılaştırma KURUŞ cinsinden ve TAM:
