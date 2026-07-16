@@ -56,12 +56,56 @@
   font-display: swap;
 }
 
-/* Marka token'ları — .claude/skills/benimolabilirdi-design/tokens/ */
+/* Marka token'ları — .claude/skills/benimolabilirdi-design/tokens/colors.css (çekirdek) */
 :root {
-  --bg-page: #faf3e8;
-  --text-body: #1e2a4a;
+  --cream-100: #faf3e8;
+  --cream-200: #f3e7d2;
+  --cream-300: #e9d8bc;
+  --navy-900: #141c33;
+  --navy-800: #1e2a4a;
+  --navy-500: #5b6f9e;
+  --navy-400: #8a99bb;
+  --coral-500: #e85d4a;
+  --coral-600: #ce4a38;
+  --coral-400: #f07e6e;
+  --coral-100: #fbe0db;
+  --green-500: #2e7d5b;
+  --green-400: #4e9e7a;
+  --green-100: #dceee4;
+  --gold-500: #e8a33d;
+
+  /* Semantik */
+  --bg-page: var(--cream-100);
+  --surface-card: #ffffff;
+  --surface-navy: var(--navy-800);
+  --text-body: var(--navy-800);
+  --text-muted: var(--navy-500);
+  --text-faint: var(--navy-400);
+  --text-on-dark: #fefbf5;
+  --text-on-dark-muted: #b8c2d8;
+  --accent: var(--coral-500);
+  --positive: var(--green-500);
+
+  --r-lg: 20px;
+  --r-xl: 28px;
+  --r-pill: 999px;
+  --shadow-sm: 0 2px 12px rgba(30, 42, 74, 0.06);
+  --shadow-md: 0 8px 28px rgba(30, 42, 74, 0.1);
+
   --font-display: 'Nunito', system-ui, sans-serif;
   --font-ui: 'DM Sans', system-ui, sans-serif;
+}
+
+@keyframes bo-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(78, 158, 122, 0.5);
+  }
+  70% {
+    box-shadow: 0 0 0 7px rgba(78, 158, 122, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(78, 158, 122, 0);
+  }
 }
 
 body {
