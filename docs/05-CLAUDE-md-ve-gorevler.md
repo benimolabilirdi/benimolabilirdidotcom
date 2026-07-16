@@ -54,7 +54,7 @@ Referans dokümanlar: docs/ altında PRD, data-model, visual-spec. ÇELİŞKİDE
 
 ### Faz B — ShareCard (Opus 4.8; takılırsa Fable'a dön, ~1 oturum)
 - [ ] B1. `<ShareCard />` satori-uyumlu, üç format, docs/03 yerleşimi
-- [ ] B2. Kabul testi senaryosunu render et (docs/03 §7) → **Oğuzhan onayı — GATE 🚪**
+- [x] B2. Kabul testi senaryosunu render et (docs/03 §7) → **Oğuzhan onayı — GATE 🚪 KAPANDI** (4 format × 2 varyant, R2-R6 + persona 07 v1.1 uygulanmış)
 - [ ] B3. html-to-image indirme + Web Share API + @vercel/og endpoint + /s sayfası
 
 ### Faz C — Kullanıcı akışı (Opus 4.8, ~1-2 oturum)
