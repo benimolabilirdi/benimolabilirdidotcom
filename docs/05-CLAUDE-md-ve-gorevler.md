@@ -78,6 +78,16 @@ Referans dokümanlar: docs/ altında PRD, data-model, visual-spec. ÇELİŞKİDE
         etkiler (bandrol olan tek kademeli kategori) ve tüm gerçek telefonlar %50 kademesinde
         olduğu için sonucu değiştirmiyor. Tersi çıkarsa: isWithinTier'e tek çarpan eklemek yeter.
 - [ ] E2. 14 kategori × 8-10 ürün gerçekçi fiyatlarla tam seed CSV
+  - **CURATION İLKESİ (Oğuzhan, C2):** ANA AKIŞ ürünleri (is_purchasable) = **yüksek ÖTV +
+    LÜKS DEĞİL + tanıdık.** Sebep: lüks ürün özdeşleşmeyi kırar ("o zenginin derdi"); güç,
+    sıradan insanın sıradan şeye ödediği devasa gizli vergide. Rolex/spor araba/katlanır
+    telefon YOK. Öne çıkacaklar (en yüksek etki): **otomobil** (en çok satan halk arabası),
+    **akaryakıt** (benzin/motorin), **telefon** (orta segment + baz iPhone). Sonra kozmetik/
+    parfüm, oyun konsolu; beyaz eşya/TV düşük ÖTV ama tanıdık olduğu için kalır.
+  - ⚠️ Otomobil ve akaryakıt en yüksek etkili ama şu an ürünsüz — E1'e bağlı (otomobil kademe
+    tablosu, akaryakıt maktu ÖTV). E1 çözülmeden bu iki vurucu kategori seed'lenemez.
+  - Hayal döngüsü ürünleri (is_spendable, ÖTV'siz kategoriler) ayrı: onlar "keşke alabilseydim"
+    tarafı, lüks-değil kuralı orada da geçerli ama tanıdık-güzel şeyler (kitap, tatil, hediye).
 - [ ] E3. "Nasıl hesaplıyoruz?" sayfası içeriği (kaynak linkli)
 - [ ] E4. Tüm site copy'sinin ton denetimi
 
