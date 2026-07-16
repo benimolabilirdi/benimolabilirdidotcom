@@ -1,0 +1,424 @@
+/**
+ * Vergi motoru — projenin TEK hesap yeri.
+ *
+ * Bu dosya framework-agnostiktir: Next/React/Supabase import'u YASAK, saf TypeScript.
+ * Sebep: aynı dosya seed script'te (tsx), admin panelde (client) ve API route'ta
+ * (server) çalışır.
+ *
+ * Algoritma: docs/02-data-model.md §2 · Metodoloji: docs/01-PRD.md §4
+ */
+
+// ---------------------------------------------------------------------------
+// Tipler
+// ---------------------------------------------------------------------------
+
+/** ÖTV gibi matraha göre kademelenen bileşenin tek kademesi. Son kademe: max_matrah null. */
+export type TaxTier = {
+  /** Kademenin üst sınırı (dahil). Son kademede null = sınırsız. */
+  max_matrah: number | null
+  rate: number
+}
+
+export type RateComponent = { key: string; label: string; rate: number }
+export type TieredComponent = { key: string; label: string; tiers: TaxTier[] }
+export type FixedComponent = { key: string; label: string; amount_per_unit: number }
+
+export type ChainComponent = RateComponent | TieredComponent
+export type FixedChainComponent = RateComponent | FixedComponent
+
+export type TaxFormula =
+  | { type: 'chain'; components: ChainComponent[] }
+  | { type: 'none' }
+  | { type: 'fixed_per_unit'; unit: string; components: FixedChainComponent[] }
+
+export type TaxLine = { key: string; label: string; amount: number }
+
+export type TaxResult = {
+  /** Girilen raf fiyatı (kuruşa yuvarlanmış). */
+  retailPrice: number
+  /** Tüm dolaylı vergiler çıkınca kalan çıplak fiyat (= matrah). */
+  taxFreePrice: number
+  /** retailPrice − taxFreePrice. Her zaman breakdown toplamına eşittir. */
+  totalTax: number
+  /** Sıralı, etiketli vergi satırları (UI için). */
+  lines: TaxLine[]
+  /** DB'ye yazmak için: {"otv": 39500, "kdv": 19800, ...} (docs/02 products.tax_breakdown). */
+  breakdown: Record<string, number>
+  /** totalTax / retailPrice — 0..1 arası. */
+  taxRatio: number
+  /** Hesabın açıklama gerektiren yanları (kademe eşiğine sabitleme vb.). Normalde boş. */
+  notes: string[]
+}
+
+export type TaxOptions = {
+  /** fixed_per_unit formüller için zorunlu (örn. litre). */
+  quantity?: number
+}
+
+// ---------------------------------------------------------------------------
+// Yardımcılar
+// ---------------------------------------------------------------------------
+
+const isTiered = (c: ChainComponent): c is TieredComponent => 'tiers' in c
+const isFixedAmount = (c: FixedChainComponent): c is FixedComponent => 'amount_per_unit' in c
+
+/** TL → kuruş (integer). Tüm yuvarlama tek noktadan geçsin diye. */
+const toKurus = (tl: number): number => Math.round(tl * 100)
+const toTL = (kurus: number): number => kurus / 100
+
+function assertPositiveFinite(value: unknown, name: string): asserts value is number {
+  if (typeof value !== 'number' || !Number.isFinite(value)) {
+    throw new TypeError(`${name} sonlu bir sayı olmalı, alınan: ${String(value)}`)
+  }
+  if (value <= 0) {
+    throw new RangeError(`${name} sıfırdan büyük olmalı, alınan: ${value}`)
+  }
+}
+
+function assertRate(value: unknown, name: string): asserts value is number {
+  if (typeof value !== 'number' || !Number.isFinite(value)) {
+    throw new TypeError(`${name} sonlu bir sayı olmalı, alınan: ${String(value)}`)
+  }
+  if (value < 0) {
+    throw new RangeError(`${name} negatif olamaz, alınan: ${value}`)
+  }
+}
+
+/**
+ * Formülü doğrular. tax_formula DB'de jsonb — yani runtime'da güvenilmez veri.
+ * Admin formül düzenleyicisi de bunu kullanır.
+ */
+export function assertValidFormula(formula: TaxFormula): void {
+  if (!formula || typeof formula !== 'object') {
+    throw new TypeError('tax_formula bir nesne olmalı')
+  }
+
+  if (formula.type === 'none') return
+
+  if (formula.type === 'chain') {
+    if (!Array.isArray(formula.components)) {
+      throw new TypeError('chain formülünde components dizi olmalı')
+    }
+    const tieredCount = formula.components.filter(isTiered).length
+    if (tieredCount > 1) {
+      throw new RangeError(
+        `Kademeli bileşen en fazla 1 olabilir (kapalı-form çözüm varsayımı), bulunan: ${tieredCount}`
+      )
+    }
+    for (const c of formula.components) {
+      if (isTiered(c)) assertValidTiers(c)
+      else assertRate(c.rate, `${c.key}.rate`)
+    }
+    return
+  }
+
+  if (formula.type === 'fixed_per_unit') {
+    if (!Array.isArray(formula.components)) {
+      throw new TypeError('fixed_per_unit formülünde components dizi olmalı')
+    }
+    for (const c of formula.components) {
+      if (isFixedAmount(c)) assertRate(c.amount_per_unit, `${c.key}.amount_per_unit`)
+      else assertRate(c.rate, `${c.key}.rate`)
+    }
+    return
+  }
+
+  throw new TypeError(`Bilinmeyen tax_formula tipi: ${String((formula as { type: unknown }).type)}`)
+}
+
+function assertValidTiers(component: TieredComponent): void {
+  const { tiers, key } = component
+  if (!Array.isArray(tiers) || tiers.length === 0) {
+    throw new TypeError(`${key}.tiers boş olamaz`)
+  }
+  let previousMax = 0
+  for (let i = 0; i < tiers.length; i++) {
+    const tier = tiers[i]
+    assertRate(tier.rate, `${key}.tiers[${i}].rate`)
+    const isLast = i === tiers.length - 1
+    if (tier.max_matrah === null) {
+      if (!isLast) throw new RangeError(`${key}.tiers: yalnızca son kademe max_matrah null olabilir`)
+      continue
+    }
+    if (isLast) {
+      throw new RangeError(`${key}.tiers: son kademenin max_matrah'ı null olmalı (sınırsız)`)
+    }
+    assertPositiveFinite(tier.max_matrah, `${key}.tiers[${i}].max_matrah`)
+    if (tier.max_matrah <= previousMax) {
+      throw new RangeError(`${key}.tiers artan sırada olmalı (${tier.max_matrah} <= ${previousMax})`)
+    }
+    previousMax = tier.max_matrah
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Ana giriş noktası
+// ---------------------------------------------------------------------------
+
+/**
+ * Raf fiyatından matrahı (vergisiz fiyat) ve vergi dökümünü ters kaskadla çözer.
+ *
+ * Değişmezler (her formül tipi için):
+ *   taxFreePrice + totalTax === retailPrice   (kuruşu kuruşuna)
+ *   sum(lines[].amount)     === totalTax      (kuruşu kuruşuna)
+ */
+export function calculateTax(
+  retailPrice: number,
+  formula: TaxFormula,
+  options: TaxOptions = {}
+): TaxResult {
+  assertPositiveFinite(retailPrice, 'retailPrice')
+  assertValidFormula(formula)
+
+  const retailK = toKurus(retailPrice)
+  const notes: string[] = []
+
+  let matrah: number
+  let rawLines: Array<{ key: string; label: string; amount: number }>
+
+  if (formula.type === 'none' || formula.components.length === 0) {
+    // Kitap (%0) ve bağış: vergisiz fiyat = raf fiyatı. Dürüstlük göstergesi (PRD §4.4).
+    matrah = toTL(retailK)
+    rawLines = []
+  } else if (formula.type === 'chain') {
+    const solved = solveChain(toTL(retailK), formula.components)
+    matrah = solved.matrah
+    rawLines = solved.lines
+    notes.push(...solved.notes)
+  } else {
+    const solved = solveFixedPerUnit(toTL(retailK), formula, options)
+    matrah = solved.matrah
+    rawLines = solved.lines
+  }
+
+  return assemble(retailK, matrah, rawLines, notes)
+}
+
+// ---------------------------------------------------------------------------
+// chain: oransal zincir (+ kademeli ÖTV)
+// ---------------------------------------------------------------------------
+
+type ChainSolution = {
+  matrah: number
+  lines: Array<{ key: string; label: string; amount: number }>
+  notes: string[]
+}
+
+type TierCandidate = {
+  rates: number[]
+  matrah: number
+  lower: number
+  upper: number
+}
+
+function solveChain(retail: number, components: ChainComponent[]): ChainSolution {
+  const tieredIndex = components.findIndex(isTiered)
+
+  // Kademesiz zincir: tek çarpan, tek bölme.
+  if (tieredIndex === -1) {
+    const rates = components.map((c) => (c as RateComponent).rate)
+    const matrah = retail / multiplierOf(rates)
+    return { matrah, lines: forwardChain(matrah, components, rates), notes: [] }
+  }
+
+  const tiered = components[tieredIndex] as TieredComponent
+
+  // Kapalı form: her kademe oranıyla matrahı dene, kendi aralığına düşen çözüm geçerli.
+  // Kademe oranı arttıkça matrah azalır, yani en fazla bir kademe tutarlı olabilir.
+  const candidates: TierCandidate[] = tiered.tiers.map((tier, i) => {
+    const rates = ratesForTier(components, tieredIndex, tier.rate)
+    return {
+      rates,
+      matrah: retail / multiplierOf(rates),
+      lower: i === 0 ? 0 : (tiered.tiers[i - 1].max_matrah as number),
+      upper: tier.max_matrah ?? Infinity,
+    }
+  })
+
+  for (const candidate of candidates) {
+    if (isWithinTier(candidate)) {
+      return {
+        matrah: candidate.matrah,
+        lines: forwardChain(candidate.matrah, components, candidate.rates),
+        notes: [],
+      }
+    }
+  }
+
+  // Hiçbir kademe tutarlı değil → kademe sıçraması yüzünden erişilemeyen raf fiyatı bandı.
+  return pinToTierBoundary(retail, components, tieredIndex, tiered, candidates)
+}
+
+/**
+ * Kademe aralığı kontrolü kuruş cinsinden yapılır: matrah zaten kuruşa yuvarlanıp
+ * saklanacağı için kademe kararı saklanan değerle tutarlı olmalı. Ayrıca float artığı
+ * (640/1500 gibi tam eşiklerde 1500.0000000000002) sahte boşluk üretmesin diye.
+ */
+function isWithinTier({ matrah, lower, upper }: TierCandidate): boolean {
+  return toKurus(matrah) > toKurus(lower) && toKurus(matrah) <= toKurus(upper)
+}
+
+/**
+ * Kademeli oran matrahta sıçradığı için raf fiyatı da sıçrar: iki kademe arasında
+ * hiçbir matrahın üretemediği bir raf fiyatı bandı kalır. Böyle bir fiyat gelirse
+ * matrah eşiğe sabitlenir — toplam vergi (raf − eşik) yine kesindir, tutmayan fark
+ * sıçramanın kaynağı olan kademeli bileşene (ÖTV) yazılır.
+ */
+function pinToTierBoundary(
+  retail: number,
+  components: ChainComponent[],
+  tieredIndex: number,
+  tiered: TieredComponent,
+  candidates: TierCandidate[]
+): ChainSolution {
+  for (let i = 0; i < candidates.length - 1; i++) {
+    const current = candidates[i]
+    const next = candidates[i + 1]
+
+    // Boşluk tam burada: bu kademe kendi tavanını aşıyor, sonraki ise tabanın altında kalıyor.
+    const overshoots = toKurus(current.matrah) > toKurus(current.upper)
+    const nextUndershoots = toKurus(next.matrah) <= toKurus(current.upper)
+    if (!overshoots || !nextUndershoots) continue
+
+    // Eşik, üst sınırı dahil olan kademeye aittir → o kademenin oranlarıyla yürütülür.
+    const boundary = current.upper
+    const lines = forwardChain(boundary, components, current.rates)
+    const accountedTax = lines.reduce((sum, line) => sum + line.amount, 0)
+    const residual = retail - boundary - accountedTax
+
+    lines[tieredIndex] = {
+      ...lines[tieredIndex],
+      amount: lines[tieredIndex].amount + residual,
+    }
+
+    return {
+      matrah: boundary,
+      lines,
+      notes: [
+        `${tiered.label} kademe eşiği: bu raf fiyatı bandında tutarlı çözüm yok ` +
+          `(oran sıçraması). Matrah ${boundary} TL eşiğine sabitlendi, fark ${tiered.label} ` +
+          `satırına yazıldı.`,
+      ],
+    }
+  }
+
+  // Buraya düşmemeli: kademeler doğrulanmışsa ya bir kademe tutar ya da bir boşluk bulunur.
+  throw new RangeError(
+    `${tiered.key}: ${retail} TL için kademe çözümü bulunamadı (kademe tablosu tutarsız)`
+  )
+}
+
+/** Kademeli bileşenin yerine verilen oranı koyarak zincirin oran listesini üretir. */
+function ratesForTier(components: ChainComponent[], tieredIndex: number, tierRate: number): number[] {
+  return components.map((c, i) => (i === tieredIndex ? tierRate : (c as RateComponent).rate))
+}
+
+const multiplierOf = (rates: number[]): number => rates.reduce((acc, rate) => acc * (1 + rate), 1)
+
+/** Matrahtan ileri yürüyerek her bileşenin TL tutarını yazar (docs/02 §2). */
+function forwardChain(
+  matrah: number,
+  components: ChainComponent[],
+  rates: number[]
+): Array<{ key: string; label: string; amount: number }> {
+  let running = matrah
+  return components.map((component, i) => {
+    const amount = running * rates[i]
+    running += amount
+    return { key: component.key, label: component.label, amount }
+  })
+}
+
+// ---------------------------------------------------------------------------
+// fixed_per_unit: maktu (akaryakıt)
+// ---------------------------------------------------------------------------
+
+function solveFixedPerUnit(
+  retail: number,
+  formula: { type: 'fixed_per_unit'; unit: string; components: FixedChainComponent[] },
+  options: TaxOptions
+): { matrah: number; lines: Array<{ key: string; label: string; amount: number }> } {
+  const { quantity } = options
+  assertPositiveFinite(quantity, `quantity (${formula.unit})`)
+
+  const retailPerUnit = retail / quantity
+
+  // Ters yön: zinciri sondan başa çöz.
+  let running = retailPerUnit
+  for (let i = formula.components.length - 1; i >= 0; i--) {
+    const component = formula.components[i]
+    running = isFixedAmount(component)
+      ? running - component.amount_per_unit
+      : running / (1 + component.rate)
+  }
+
+  if (running <= 0) {
+    throw new RangeError(
+      `Maktu vergiler raf fiyatını aşıyor: ${formula.unit} başına ${retailPerUnit.toFixed(2)} TL ` +
+        `için matrah ${running.toFixed(2)} TL çıktı. Fiyat veya formül hatalı.`
+    )
+  }
+
+  const matrahPerUnit = running
+
+  // İleri yön: bileşen tutarları.
+  running = matrahPerUnit
+  const lines = formula.components.map((component) => {
+    const amount = isFixedAmount(component)
+      ? component.amount_per_unit
+      : running * component.rate
+    running += amount
+    return { key: component.key, label: component.label, amount: amount * quantity }
+  })
+
+  return { matrah: matrahPerUnit * quantity, lines }
+}
+
+// ---------------------------------------------------------------------------
+// Yuvarlama ve sonuç
+// ---------------------------------------------------------------------------
+
+/**
+ * Kuruş cinsinden toplar, artığı en büyük satıra vererek değişmezleri garanti eder.
+ * (Float toplamı doğrudan yuvarlanırsa breakdown toplamı raf − vergisiz'den kayabilir.)
+ */
+function assemble(
+  retailK: number,
+  matrah: number,
+  rawLines: Array<{ key: string; label: string; amount: number }>,
+  notes: string[]
+): TaxResult {
+  const taxFreeK = toKurus(matrah)
+  const totalTaxK = retailK - taxFreeK
+
+  const lineKurus = rawLines.map((line) => toKurus(line.amount))
+  const roundingResidual = totalTaxK - lineKurus.reduce((sum, k) => sum + k, 0)
+
+  if (roundingResidual !== 0 && lineKurus.length > 0) {
+    // En büyük satır, kuruşluk düzeltmeyi oransal olarak en az bozan yerdir.
+    let largest = 0
+    for (let i = 1; i < lineKurus.length; i++) {
+      if (lineKurus[i] > lineKurus[largest]) largest = i
+    }
+    lineKurus[largest] += roundingResidual
+  }
+
+  const lines: TaxLine[] = rawLines.map((line, i) => ({
+    key: line.key,
+    label: line.label,
+    amount: toTL(lineKurus[i]),
+  }))
+
+  const breakdown: Record<string, number> = {}
+  for (const line of lines) breakdown[line.key] = line.amount
+
+  return {
+    retailPrice: toTL(retailK),
+    taxFreePrice: toTL(taxFreeK),
+    totalTax: toTL(totalTaxK),
+    lines,
+    breakdown,
+    taxRatio: totalTaxK / retailK,
+    notes,
+  }
+}
