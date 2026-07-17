@@ -6,6 +6,7 @@
  */
 import { useState } from 'react'
 import { Picker } from '@/components/flow/Picker'
+import { Dream } from '@/components/flow/Dream'
 import { CountUp } from '@/components/CountUp'
 import { Wordmark } from '@/components/Wordmark'
 import { formatTL } from '@/lib/share-card'
@@ -57,7 +58,7 @@ export function Flow({ categories }: { categories: FlowCategory[] }) {
       ) : null}
 
       {step === 'dream' && selection ? (
-        <DreamStub selection={selection} onBack={() => setStep('shock')} />
+        <Dream selection={selection} categories={categories} onBack={() => setStep('shock')} />
       ) : null}
     </main>
   )
@@ -75,13 +76,11 @@ function ShockScreen({
 }) {
   const pct = Math.round(selection.taxRatio * 100)
 
-  // "Bir ___ daha alabilirdin" YALNIZCA vergi ≥ vergisiz fiyatsa (birebir doğru, şişirmez).
-  // Kaç tane: floor(vergi / vergisiz). Telefonda 1, pahalı ÖTV'li arabada 2+.
-  const extraUnits = Math.floor(selection.totalTax / selection.taxFreePrice)
-  const shockCopy =
-    extraUnits >= 1
-      ? `Ah be. Bu vergiyle ${extraUnits > 1 ? `${extraUnits} ` : 'bir '}${selection.unitNoun} daha alabilirdin. Ya da sen ne almak isterdin, hesaplayalım mı?`
-      : 'Ah be. Bu parayla neler alabilirdin, hesaplayalım mı?'
+  // Verginle alınabilecek en pahalı BAŞKA model (retail ≤ vergi) → somut karşılaştırma.
+  // Aynı ürün alınamasa da başka model alınabiliyor: "bu vergiyle bir de X alabilirdin".
+  const shockCopy = selection.affordableModel
+    ? `Ah be. Bu vergiyle bir de ${selection.affordableModel} alabilirdin. Ya da sen ne almak isterdin, hesaplayalım mı?`
+    : 'Ah be. Bu parayla neler alabilirdin, hesaplayalım mı?'
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', flexGrow: 1, gap: 18 }}>
@@ -205,22 +204,3 @@ function ShockScreen({
   )
 }
 
-/** Hayal döngüsü stub — C4'te bütçe barı + kategori→etiket→ürün→metin + döngü mantığı gelecek. */
-function DreamStub({ selection, onBack }: { selection: PurchaseSelection; onBack: () => void }) {
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-      <button
-        onClick={onBack}
-        style={{ alignSelf: 'flex-start', background: 'none', border: 'none', color: 'var(--text-muted)', fontFamily: 'var(--font-ui)', fontSize: 15, fontWeight: 600, cursor: 'pointer', padding: 0 }}
-      >
-        ← Şok ekranı
-      </button>
-      <h1 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 24, margin: 0 }}>
-        Bu {formatTL(selection.totalTax)}&apos;yi nerede harcardın?
-      </h1>
-      <p style={{ fontFamily: 'var(--font-ui)', fontSize: 15, color: 'var(--text-muted)' }}>
-        (C4: bütçe barı + kategori→etiket→ürün→kişisel metin + döngü sonu burada gelecek.)
-      </p>
-    </div>
-  )
-}
