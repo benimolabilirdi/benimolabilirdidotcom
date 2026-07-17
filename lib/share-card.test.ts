@@ -92,10 +92,10 @@ describe('fitItems — liste kapasitesi (docs/03 §4)', () => {
   })
 
   it('taşarsa son satırı kompakt özete bırakır, taşanlar hidden[]', () => {
-    // Story 9 satır alır; 12 kalemde 8 görünür + 4 gizli (emoji özeti).
+    // Story 7 satır alır; 12 kalemde 6 görünür + 6 gizli (emoji özeti).
     const { visible, hidden } = fitItems(items(12), 'story')
-    expect(visible).toHaveLength(8)
-    expect(hidden).toHaveLength(4)
+    expect(visible).toHaveLength(6)
+    expect(hidden).toHaveLength(6)
     expect(visible.length + hidden.length).toBe(12)
   })
 

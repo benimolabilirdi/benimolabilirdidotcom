@@ -94,9 +94,11 @@ export const FORMATS: Record<
   ShareCardFormat,
   { w: number; h: number; label: string; ratio: string; maxRows: number }
 > = {
-  story: { w: 1080, h: 1920, label: 'Story', ratio: '9:16', maxRows: 9 },
-  post: { w: 1080, h: 1350, label: 'Post', ratio: '4:5', maxRows: 6 },
-  square: { w: 1080, h: 1080, label: 'Kare', ratio: '1:1', maxRows: 4 },
+  // maxRows etiketli (yani en uzun) satırlarla bile taşmayacak şekilde muhafazakâr;
+  // footer ayrıca minHeight:0+overflow ile korunuyor. Fazlası emoji özetine gider.
+  story: { w: 1080, h: 1920, label: 'Story', ratio: '9:16', maxRows: 7 },
+  post: { w: 1080, h: 1350, label: 'Post', ratio: '4:5', maxRows: 4 },
+  square: { w: 1080, h: 1080, label: 'Kare', ratio: '1:1', maxRows: 2 },
   og: { w: 1200, h: 630, label: 'Link önizleme', ratio: '1.91:1', maxRows: 3 },
 }
 

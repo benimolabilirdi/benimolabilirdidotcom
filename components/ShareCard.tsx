@@ -434,13 +434,29 @@ export function ShareCard({ format = 'story', data, scale = 1 }: Props) {
         </div>
       </div>
 
-      {/* hayal listesi — çok kalemde satırlar density ile sıkışır */}
-      <div style={{ display: 'flex', flexDirection: 'column', flexGrow: 1, gap: 14 * s * density, marginTop: 26 * s }}>
+      {/* hayal listesi — flexShrink+minHeight:0+overflow: taşarsa KENDİ içinde kırpılır,
+          footer ve yeşil kutu asla kesilmez. Overflow özeti liste dışında, hep görünür. */}
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          flexGrow: 1,
+          flexShrink: 1,
+          minHeight: 0,
+          overflow: 'hidden',
+          gap: 14 * s * density,
+          marginTop: 26 * s,
+        }}
+      >
         {visible.map((item, i) => (
           <WishRow key={i} item={item} s={s * density} />
         ))}
-        {hidden.length > 0 ? <OverflowRow hidden={hidden} s={s} /> : null}
       </div>
+      {hidden.length > 0 ? (
+        <div style={{ display: 'flex', marginTop: 12 * s }}>
+          <OverflowRow hidden={hidden} s={s} />
+        </div>
+      ) : null}
 
       {/* kalan — yeşil kutu */}
       {data.remaining > 0 ? (
