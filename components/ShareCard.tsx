@@ -250,6 +250,8 @@ function OverflowRow({ hidden, s }: { hidden: WishItem[]; s: number }) {
 export function ShareCard({ format = 'story', data, scale = 1 }: Props) {
   const f = FORMATS[format]
   const { visible, hidden } = fitItems(data.items, format)
+  // Görselin büyük rakamı: ekstra vergi (varsa), yoksa toplam vergi.
+  const heroTax = data.excessTax ?? data.totalTax
   // Çok kalem varsa satırları sıkıştır (daha fazlası sığsın, kaybolmasın).
   const density = visible.length <= 5 ? 1 : visible.length <= 7 ? 0.9 : 0.82
 
@@ -306,7 +308,7 @@ export function ShareCard({ format = 'story', data, scale = 1 }: Props) {
                 display: 'flex',
                 fontFamily: FONT_UI,
                 fontVariantNumeric: 'tabular-nums',
-                fontSize: 72 * Math.min(1, 12 / `${formatTL(data.totalTax)}'si`.length),
+                fontSize: 72 * Math.min(1, 12 / `${formatTL(heroTax)}'si`.length),
                 fontWeight: 800,
                 color: C.accent,
                 letterSpacing: '-0.03em',
@@ -314,7 +316,7 @@ export function ShareCard({ format = 'story', data, scale = 1 }: Props) {
                 whiteSpace: 'nowrap',
               }}
             >
-              {`${formatTL(data.totalTax)}'si`}
+              {`${formatTL(heroTax)}'si`}
             </div>
             <div
               style={{
@@ -395,7 +397,7 @@ export function ShareCard({ format = 'story', data, scale = 1 }: Props) {
         >
           {`${formatTL(data.retailPrice)} ödedim.`}
         </div>
-        <ShockBlock totalTax={data.totalTax} components={data.taxComponents} s={hero} />
+        <ShockBlock totalTax={heroTax} components={data.taxComponents} s={hero} />
       </div>
 
       {/* p4 — persona (buruk iç ses, zirveden sonra). Yoksa hiç basılmaz (docs/07 §1). */}

@@ -33,6 +33,7 @@ export function Preview({
       product: selection.product,
       retailPrice: selection.retailPrice,
       totalTax: selection.totalTax,
+      excessTax: selection.excessTax,
       taxComponents: selection.taxComponents,
       items,
       remaining,

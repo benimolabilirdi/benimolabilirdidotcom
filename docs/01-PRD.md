@@ -162,6 +162,27 @@ Kabul görseli üzerinde çalışırken §4.5 üç noktada değişti:
 **§3.5'e bağlı:** profil adımı (kullanıcının kendi vergi durumunu beyan etmesi) bu
 ifadeyi güçlendirecek — E1'de finalize edilecek, bkz. §3.5.
 
+### 4.7 Ekstra vergi (excessTax) — C4 revizyonu
+
+**Sorun:** KDV her üründe var (standart tüketim vergisi). "Bunun X'i vergiydi" derken
+KDV'yi de saymak, KDV'siz bir dünya iması taşır — savunması zor. Asıl mesele KDV değil,
+**onun ve ürünün üstüne binen ekstra yükler** (ÖTV, bandrol, fon) ve **o yüklerin üstüne
+tekrar binen KDV** (verginin vergisi).
+
+**Çözüm (lib/tax.ts, çekirdek değişmedi):** KDV bileşenine `baseline: true`. İki türetme:
+- `comparisonPrice = matrah × (1 + Σ baseline oranlar)` — ürün yalnız standart KDV'li
+  olsaydı ödenecek "adil" fiyat.
+- `excessTax = raf − comparisonPrice` — ÖTV + bandrol + fon + **bunların üstüne binen KDV**.
+
+**Görselde ve bütçede artık excessTax kullanılır.** Şok breakdown kartı dört satırı da
+gösterir ama KDV ikiye ayrılır: "KDV (ürünün kendisi)" soluk (baseline, zaten olurdu) +
+"KDV (vergilerin üzerine binen)" mercan (excess). Şeffaflık vitrini: kullanıcı hem standart
+KDV'yi hem verginin vergisini ayrı görür.
+
+Kitap/bağış değişmez (excessTax=0). Sadece-KDV'li kategoriler (kültür-sanat, sağlık…)
+excessTax=0 verir — zaten ana akışta yoklar (is_purchasable false), yalnız hayal tarafında.
+Değişmez: `comparisonPrice + excessTax = raf` (kuruşu kuruşuna).
+
 ## 5. Kategoriler (v1)
 
 Beyaz eşya · Otomobil · Elektronik (telefon/TV/bilgisayar/konsol ayrı alt gruplar) · Akaryakıt · Eğitim · Kültür-Sanat · Sağlık · Tatil · Kitap · Oyuncak · Hediye* · Bağış · Evcil hayvan · Spor

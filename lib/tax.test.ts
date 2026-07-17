@@ -26,7 +26,26 @@ const BEYAZ_ESYA: TaxFormula = {
   type: 'chain',
   components: [
     { key: 'otv', label: 'ÖTV', rate: 0.067 },
-    { key: 'kdv', label: 'KDV', rate: 0.2 },
+    { key: 'kdv', label: 'KDV', baseline: true, rate: 0.2 },
+  ],
+}
+
+// KDV baseline:true — comparisonPrice/excessTax türetmesi için.
+const TELEFON_BASELINE: TaxFormula = {
+  type: 'chain',
+  components: [
+    { key: 'bandrol', label: 'TRT Bandrolü', base: 'matrah', rate: 0.12 },
+    { key: 'fon', label: 'Kültür Fonu', base: 'matrah', rate: 0.01 },
+    {
+      key: 'otv',
+      label: 'ÖTV',
+      tiers: [
+        { max_matrah: 640, rate: 0.25 },
+        { max_matrah: 1500, rate: 0.4 },
+        { max_matrah: null, rate: 0.5 },
+      ],
+    },
+    { key: 'kdv', label: 'KDV', baseline: true, rate: 0.2 },
   ],
 }
 
@@ -72,6 +91,43 @@ describe('kademesiz zincir', () => {
     expect(result.breakdown.kdv).toBe(1666.67) // (7810.06 + 523.27) × 0.20
     expect(result.totalTax).toBe(2189.94)
     expectInvariants(result)
+  })
+})
+
+describe('baseline / excessTax (KDV bazı çıplak fiyatta da olurdu)', () => {
+  it("telefonda excessTax = raf − matrah×(1+KDV); baseline KDV ekstranın dışında", () => {
+    const r = calculateTax(119000, TELEFON_BASELINE)
+    expect(r.taxFreePrice).toBe(58505.41)
+    expect(r.baselineTax).toBe(11701.08) // 58505.41 × 0.20
+    expect(r.comparisonPrice).toBe(70206.49) // matrah × 1.20
+    expect(r.excessTax).toBe(48793.51) // 119000 − 70206.49 = toplam − baseline
+    // KDV satırı ikiye bölünebilir: baseline (ürünün kendisi) + excess (üstüne binen).
+    const kdv = r.lines.find((l) => l.key === 'kdv')!
+    expect(kdv.baselineAmount).toBe(11701.08)
+    expect(kdv.amount - kdv.baselineAmount!).toBeCloseTo(8132.25, 2)
+  })
+
+  it('değişmez: comparisonPrice + excessTax = raf (kuruşu kuruşuna)', () => {
+    for (const raf of [119000, 24000, 999.99, 500000]) {
+      const r = calculateTax(raf, TELEFON_BASELINE)
+      expect(Math.round(r.comparisonPrice * 100) + Math.round(r.excessTax * 100)).toBe(Math.round(raf * 100))
+    }
+  })
+
+  it('sadece-KDV kategoride excessTax = 0 (comparisonPrice = raf)', () => {
+    const KDV_ONLY: TaxFormula = { type: 'chain', components: [{ key: 'kdv', label: 'KDV', baseline: true, rate: 0.1 }] }
+    const r = calculateTax(3600, KDV_ONLY)
+    expect(r.excessTax).toBe(0)
+    expect(r.comparisonPrice).toBe(3600)
+    expect(r.baselineTax).toBe(r.totalTax)
+  })
+
+  it('baseline işareti yoksa excessTax = totalTax (comparisonPrice = matrah)', () => {
+    // KDV baseline:false → hiçbir vergi "olağan" sayılmaz, hepsi ekstra.
+    const NO_BASELINE: TaxFormula = { type: 'chain', components: [{ key: 'kdv', label: 'KDV', rate: 0.2 }] }
+    const r = calculateTax(1200, NO_BASELINE)
+    expect(r.comparisonPrice).toBe(r.taxFreePrice)
+    expect(r.excessTax).toBe(r.totalTax)
   })
 })
 

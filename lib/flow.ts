@@ -53,10 +53,17 @@ export type PurchaseSelection = {
   retailPrice: number
   taxFreePrice: number
   totalTax: number
+  /** raf − comparisonPrice: ekstra vergiler + üstüne binen KDV. Görsel/bütçe bunu kullanır (docs/01 §4.7). */
+  excessTax: number
+  /** matrah × (1 + baseline oranlar): sadece standart vergili adil fiyat. */
+  comparisonPrice: number
   taxRatio: number
   breakdown: Record<string, number>
-  /** Şok ekranı breakdown kartı için: sıralı + TAM etiketli (short_label değil — yer bol, resmi ad güven verir). */
-  lines: Array<{ label: string; amount: number }>
+  /**
+   * Şok ekranı breakdown kartı için: sıralı + TAM etiketli. baseline satır (KDV) için
+   * baselineAmount = ürünün kendisine düşen kısım (soluk); kalanı üstüne binen (mercan).
+   */
+  lines: Array<{ key: string; label: string; amount: number; baselineAmount?: number }>
   /** ShareCard p3 için: kısa etiketli, tutara göre sıralı. */
   taxComponents: string[]
 }
@@ -76,10 +83,9 @@ export function computeSelection(
   try {
     const result = calculateTax(retailPrice, category.taxFormula, { quantity })
 
-    // Ödenen vergiyle alınabilecek en pahalı BAŞKA model (retail ≤ vergi).
-    // Seçilen ürünün kendisi otomatik elenir (vergi hep raf fiyatından küçük).
+    // Ekstra vergiyle alınabilecek en pahalı BAŞKA model (retail ≤ excessTax).
     const affordable = category.products
-      .filter((p) => p.retailPrice <= result.totalTax)
+      .filter((p) => p.retailPrice <= result.excessTax)
       .reduce<FlowProduct | null>((best, p) => (!best || p.retailPrice > best.retailPrice ? p : best), null)
 
     return {
@@ -89,9 +95,11 @@ export function computeSelection(
       retailPrice: result.retailPrice,
       taxFreePrice: result.taxFreePrice,
       totalTax: result.totalTax,
+      excessTax: result.excessTax,
+      comparisonPrice: result.comparisonPrice,
       taxRatio: result.taxRatio,
       breakdown: result.breakdown,
-      lines: result.lines.map((l) => ({ label: l.label, amount: l.amount })),
+      lines: result.lines.map((l) => ({ key: l.key, label: l.label, amount: l.amount, baselineAmount: l.baselineAmount })),
       taxComponents: taxComponentLabels(result.lines),
     }
   } catch {

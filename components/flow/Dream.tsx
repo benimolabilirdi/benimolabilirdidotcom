@@ -32,7 +32,8 @@ export function Dream({
   categories: FlowCategory[]
   onBack: () => void
 }) {
-  const [remaining, setRemaining] = useState(selection.totalTax)
+  // Bütçe = ekstra vergi (docs/01 §4.7: standart KDV hariç, üstüne binen kısım).
+  const [remaining, setRemaining] = useState(selection.excessTax)
   const [items, setItems] = useState<DreamItem[]>([])
   const [step, setStep] = useState<Step>('root')
   const [mode, setMode] = useState<Mode>('self')
@@ -81,7 +82,7 @@ export function Dream({
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-      <BudgetBar remaining={remaining} total={selection.totalTax} count={items.length} />
+      <BudgetBar remaining={remaining} total={selection.excessTax} count={items.length} />
 
       {step === 'root' ? (
         <Root

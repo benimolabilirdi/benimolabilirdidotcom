@@ -22,6 +22,8 @@ export type ShareCardData = {
   product: { name: string; emoji: string }
   retailPrice: number
   totalTax: number
+  /** Ekstra vergi (docs/01 §4.7). Verilirse görselin büyük rakamı bu olur; yoksa totalTax. */
+  excessTax?: number
   /**
    * Bu ÜRÜNDE gerçekten olan vergilerin adları, gösterim sırasıyla.
    * Üründen ürüne DEĞİŞİR: beyaz eşyada TRT payı yok, kitapta hiçbiri yok.

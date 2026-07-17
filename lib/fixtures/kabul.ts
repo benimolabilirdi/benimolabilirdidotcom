@@ -33,6 +33,8 @@ const BASE: ShareCardData = {
   product: { name: 'iPhone 17', emoji: '📱' },
   retailPrice: 119000,
   totalTax: 59400,
+  // Ekstra vergi (görselin büyük rakamı): standart KDV hariç, üstüne binen kısım (docs/01 §4.7).
+  excessTax: 48000,
   // Telefonun gerçek bileşenleri, tutara göre (taxComponentLabels'ın üreteceği sıra).
   // bandrol+fon base:matrah ile ayrıldı → dört kalem, çarpan yine 1.13 (vergi şişmez).
   taxComponents: ['ÖTV', 'KDV', 'TRT payı', 'fon'],

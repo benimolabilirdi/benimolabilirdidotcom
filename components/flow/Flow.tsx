@@ -74,10 +74,9 @@ function ShockScreen({
   onBack: () => void
   onDream: () => void
 }) {
-  const pct = Math.round(selection.taxRatio * 100)
+  // Ekstra vergi = ÖTV/bandrol/fon + onların üstüne binen KDV (docs/01 §4.7).
+  const pct = Math.round((selection.excessTax / selection.retailPrice) * 100)
 
-  // Verginle alınabilecek en pahalı BAŞKA model (retail ≤ vergi) → somut karşılaştırma.
-  // Aynı ürün alınamasa da başka model alınabiliyor: "bu vergiyle bir de X alabilirdin".
   const shockCopy = selection.affordableModel
     ? `Ah be. Bu vergiyle bir de ${selection.affordableModel} alabilirdin. Ya da sen ne almak isterdin, hesaplayalım mı?`
     : 'Ah be. Bu parayla neler alabilirdin, hesaplayalım mı?'
@@ -117,9 +116,9 @@ function ShockScreen({
       {/* şok zirvesi */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '10px 0' }}>
         <span style={{ fontFamily: 'var(--font-ui)', fontSize: 16, fontWeight: 600, color: 'var(--navy-300)' }}>
-          Bunun vergisi:
+          Bunun ekstra vergisi:
         </span>
-        <CountUp value={selection.totalTax} fontSize={68} />
+        <CountUp value={selection.excessTax} fontSize={68} />
         <div style={{ display: 'flex', marginTop: 6 }}>
           <span
             style={{
@@ -152,12 +151,22 @@ function ShockScreen({
           padding: 16,
         }}
       >
-        {selection.lines.map((line) => (
-          <div key={line.label} style={{ display: 'flex', justifyContent: 'space-between', fontFamily: 'var(--font-ui)', fontSize: 15 }}>
-            <span style={{ color: 'var(--navy-300)' }}>{line.label}</span>
-            <span style={{ fontVariantNumeric: 'tabular-nums', fontWeight: 700 }}>{formatTL(line.amount)}</span>
-          </div>
-        ))}
+        {selection.lines.map((line) => {
+          // baseline (KDV): iki satır — "ürünün kendisi" soluk + "üstüne binen" mercan.
+          if (line.baselineAmount != null) {
+            const excess = line.amount - line.baselineAmount
+            return (
+              <div key={line.key} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <BreakRow label={`${line.label} (ürünün kendisi)`} amount={line.baselineAmount} muted />
+                {excess > 0.005 ? (
+                  <BreakRow label={`${line.label} (vergilerin üzerine binen)`} amount={excess} />
+                ) : null}
+              </div>
+            )
+          }
+          // ÖTV / bandrol / fon — hepsi ekstra (mercan).
+          return <BreakRow key={line.key} label={line.label} amount={line.amount} />
+        })}
         <div style={{ height: 1, background: 'rgba(250,243,232,0.16)', margin: '4px 0' }} />
         <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: 'var(--font-ui)', fontSize: 15 }}>
           <span style={{ color: 'var(--green-300, #8FC4AC)', fontWeight: 700 }}>Vergisiz fiyat</span>
@@ -204,3 +213,21 @@ function ShockScreen({
   )
 }
 
+
+/** Şok breakdown satırı. muted: baseline KDV (soluk); değilse ekstra vergi (mercan). */
+function BreakRow({ label, amount, muted }: { label: string; amount: number; muted?: boolean }) {
+  return (
+    <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: 'var(--font-ui)', fontSize: 15 }}>
+      <span style={{ color: muted ? 'var(--navy-400)' : 'var(--navy-300)' }}>{label}</span>
+      <span
+        style={{
+          fontVariantNumeric: 'tabular-nums',
+          fontWeight: 700,
+          color: muted ? 'var(--navy-400)' : 'var(--coral-400)',
+        }}
+      >
+        {formatTL(amount)}
+      </span>
+    </div>
+  )
+}

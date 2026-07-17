@@ -9,14 +9,44 @@
     "tax_formula": {
       "type": "chain",
       "components": [
-        { "key": "bandrol", "label": "TRT Bandrolü", "short_label": "TRT payı", "base": "matrah", "rate": 0.12 },
-        { "key": "fon", "label": "Kültür Fonu", "short_label": "fon", "base": "matrah", "rate": 0.01 },
-        { "key": "otv", "label": "ÖTV", "tiers": [
-          { "max_matrah": 640, "rate": 0.25 },
-          { "max_matrah": 1500, "rate": 0.4 },
-          { "max_matrah": null, "rate": 0.5 }
-        ]},
-        { "key": "kdv", "label": "KDV", "rate": 0.2 }
+        {
+          "key": "bandrol",
+          "label": "TRT Bandrolü",
+          "short_label": "TRT payı",
+          "base": "matrah",
+          "rate": 0.12
+        },
+        {
+          "key": "fon",
+          "label": "Kültür Fonu",
+          "short_label": "fon",
+          "base": "matrah",
+          "rate": 0.01
+        },
+        {
+          "key": "otv",
+          "label": "ÖTV",
+          "tiers": [
+            {
+              "max_matrah": 640,
+              "rate": 0.25
+            },
+            {
+              "max_matrah": 1500,
+              "rate": 0.4
+            },
+            {
+              "max_matrah": null,
+              "rate": 0.5
+            }
+          ]
+        },
+        {
+          "key": "kdv",
+          "label": "KDV",
+          "rate": 0.2,
+          "baseline": true
+        }
       ]
     }
   },
@@ -29,8 +59,17 @@
     "tax_formula": {
       "type": "chain",
       "components": [
-        { "key": "otv", "label": "ÖTV", "rate": 0.067 },
-        { "key": "kdv", "label": "KDV", "rate": 0.2 }
+        {
+          "key": "otv",
+          "label": "ÖTV",
+          "rate": 0.067
+        },
+        {
+          "key": "kdv",
+          "label": "KDV",
+          "rate": 0.2,
+          "baseline": true
+        }
       ]
     }
   },
@@ -44,9 +83,24 @@
     "tax_formula": {
       "type": "chain",
       "components": [
-        { "key": "bandrol", "label": "TRT Bandrolü", "short_label": "TRT payı", "base": "matrah", "rate": 0.16 },
-        { "key": "otv", "label": "ÖTV", "rate": 0.067 },
-        { "key": "kdv", "label": "KDV", "rate": 0.2 }
+        {
+          "key": "bandrol",
+          "label": "TRT Bandrolü",
+          "short_label": "TRT payı",
+          "base": "matrah",
+          "rate": 0.16
+        },
+        {
+          "key": "otv",
+          "label": "ÖTV",
+          "rate": 0.067
+        },
+        {
+          "key": "kdv",
+          "label": "KDV",
+          "rate": 0.2,
+          "baseline": true
+        }
       ]
     }
   },
@@ -60,8 +114,19 @@
     "tax_formula": {
       "type": "chain",
       "components": [
-        { "key": "bandrol", "label": "TRT Bandrolü", "short_label": "TRT payı", "base": "matrah", "rate": 0.04 },
-        { "key": "kdv", "label": "KDV", "rate": 0.2 }
+        {
+          "key": "bandrol",
+          "label": "TRT Bandrolü",
+          "short_label": "TRT payı",
+          "base": "matrah",
+          "rate": 0.04
+        },
+        {
+          "key": "kdv",
+          "label": "KDV",
+          "rate": 0.2,
+          "baseline": true
+        }
       ]
     }
   },
@@ -75,8 +140,17 @@
     "tax_formula": {
       "type": "chain",
       "components": [
-        { "key": "otv", "label": "ÖTV", "rate": 0.2 },
-        { "key": "kdv", "label": "KDV", "rate": 0.2 }
+        {
+          "key": "otv",
+          "label": "ÖTV",
+          "rate": 0.2
+        },
+        {
+          "key": "kdv",
+          "label": "KDV",
+          "rate": 0.2,
+          "baseline": true
+        }
       ]
     }
   },
@@ -90,8 +164,19 @@
     "tax_formula": {
       "type": "chain",
       "components": [
-        { "key": "bandrol", "label": "TRT Bandrolü", "short_label": "TRT payı", "base": "matrah", "rate": 0.14 },
-        { "key": "kdv", "label": "KDV", "rate": 0.2 }
+        {
+          "key": "bandrol",
+          "label": "TRT Bandrolü",
+          "short_label": "TRT payı",
+          "base": "matrah",
+          "rate": 0.14
+        },
+        {
+          "key": "kdv",
+          "label": "KDV",
+          "rate": 0.2,
+          "baseline": true
+        }
       ]
     }
   },
@@ -105,13 +190,37 @@
     "tax_formula": {
       "type": "chain",
       "components": [
-        { "key": "bandrol", "label": "TRT Bandrolü", "short_label": "TRT payı", "base": "matrah", "rate": 0.008 },
-        { "key": "otv", "label": "ÖTV", "tiers": [
-          { "max_matrah": 500000, "rate": 0.45 },
-          { "max_matrah": 1450000, "rate": 0.5 },
-          { "max_matrah": null, "rate": 0.8 }
-        ]},
-        { "key": "kdv", "label": "KDV", "rate": 0.2 }
+        {
+          "key": "bandrol",
+          "label": "TRT Bandrolü",
+          "short_label": "TRT payı",
+          "base": "matrah",
+          "rate": 0.008
+        },
+        {
+          "key": "otv",
+          "label": "ÖTV",
+          "tiers": [
+            {
+              "max_matrah": 500000,
+              "rate": 0.45
+            },
+            {
+              "max_matrah": 1450000,
+              "rate": 0.5
+            },
+            {
+              "max_matrah": null,
+              "rate": 0.8
+            }
+          ]
+        },
+        {
+          "key": "kdv",
+          "label": "KDV",
+          "rate": 0.2,
+          "baseline": true
+        }
       ]
     }
   },
@@ -124,8 +233,17 @@
     "tax_formula": {
       "type": "chain",
       "components": [
-        { "key": "otv", "label": "ÖTV", "rate": 0.2 },
-        { "key": "kdv", "label": "KDV", "rate": 0.2 }
+        {
+          "key": "otv",
+          "label": "ÖTV",
+          "rate": 0.2
+        },
+        {
+          "key": "kdv",
+          "label": "KDV",
+          "rate": 0.2,
+          "baseline": true
+        }
       ]
     }
   },
@@ -140,8 +258,17 @@
       "type": "fixed_per_unit",
       "unit": "litre",
       "components": [
-        { "key": "otv", "label": "ÖTV", "amount_per_unit": 0.0 },
-        { "key": "kdv", "label": "KDV", "rate": 0.2 }
+        {
+          "key": "otv",
+          "label": "ÖTV",
+          "amount_per_unit": 0
+        },
+        {
+          "key": "kdv",
+          "label": "KDV",
+          "rate": 0.2,
+          "baseline": true
+        }
       ]
     }
   },
@@ -153,7 +280,10 @@
     "verified": false,
     "is_purchasable": false,
     "e1_note": "Basılı kitapta KDV %0 — vergisiz fiyat = raf fiyatı (PRD §4.4 dürüstlük göstergesi). is_purchasable false: ÖTV'siz, ana akışta seçilemez (istismar engeli); hayal listesinde kalır.",
-    "tax_formula": { "type": "chain", "components": [] }
+    "tax_formula": {
+      "type": "chain",
+      "components": []
+    }
   },
   {
     "slug": "kultur-sanat",
@@ -165,7 +295,14 @@
     "e1_note": "KDV %10 (düşük oran seçildi, '%10 veya %20' belirsizliğinde). is_purchasable false (KDV'siz-ötv istismar engeli).",
     "tax_formula": {
       "type": "chain",
-      "components": [{ "key": "kdv", "label": "KDV", "rate": 0.1 }]
+      "components": [
+        {
+          "key": "kdv",
+          "label": "KDV",
+          "rate": 0.1,
+          "baseline": true
+        }
+      ]
     }
   },
   {
@@ -179,8 +316,17 @@
     "tax_formula": {
       "type": "chain",
       "components": [
-        { "key": "konaklama", "label": "Konaklama Vergisi", "rate": 0.02 },
-        { "key": "kdv", "label": "KDV", "rate": 0.1 }
+        {
+          "key": "konaklama",
+          "label": "Konaklama Vergisi",
+          "rate": 0.02
+        },
+        {
+          "key": "kdv",
+          "label": "KDV",
+          "rate": 0.1,
+          "baseline": true
+        }
       ]
     }
   },
@@ -193,7 +339,14 @@
     "is_purchasable": false,
     "tax_formula": {
       "type": "chain",
-      "components": [{ "key": "kdv", "label": "KDV", "rate": 0.1 }]
+      "components": [
+        {
+          "key": "kdv",
+          "label": "KDV",
+          "rate": 0.1,
+          "baseline": true
+        }
+      ]
     }
   },
   {
@@ -206,7 +359,14 @@
     "e1_note": "KDV %10 (düşük oran, '%10/%20' belirsizliğinde). is_purchasable false.",
     "tax_formula": {
       "type": "chain",
-      "components": [{ "key": "kdv", "label": "KDV", "rate": 0.1 }]
+      "components": [
+        {
+          "key": "kdv",
+          "label": "KDV",
+          "rate": 0.1,
+          "baseline": true
+        }
+      ]
     }
   },
   {
@@ -218,7 +378,14 @@
     "is_purchasable": false,
     "tax_formula": {
       "type": "chain",
-      "components": [{ "key": "kdv", "label": "KDV", "rate": 0.2 }]
+      "components": [
+        {
+          "key": "kdv",
+          "label": "KDV",
+          "rate": 0.2,
+          "baseline": true
+        }
+      ]
     }
   },
   {
@@ -229,6 +396,8 @@
     "is_purchasable": false,
     "verified": true,
     "e1_note": "Vergi yok, 1:1 geçer (PRD §4.4). Teyide gerek yok.",
-    "tax_formula": { "type": "none" }
+    "tax_formula": {
+      "type": "none"
+    }
   }
 ]

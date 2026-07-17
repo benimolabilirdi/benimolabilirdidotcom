@@ -34,7 +34,13 @@ export type TaxTier = {
  * short_label: görselde kullanılan kısa ad (docs/07 §4). Yoksa label kullanılır.
  */
 export type ComponentBase = 'chain' | 'matrah'
-export type RateComponent = { key: string; label: string; short_label?: string; base?: ComponentBase; rate: number }
+/**
+ * baseline: "bu vergi çıplak fiyatta da olurdu" işareti (KDV). Çıplak matraha da uygulanacak
+ * standart vergi. comparisonPrice ve excessTax bununla türetilir (docs/01 §4.7):
+ *   comparisonPrice = matrah × (1 + Σ baseline oranlar) — sadece standart vergili "adil" fiyat
+ *   excessTax       = raf − comparisonPrice — ÖTV/bandrol/fon + onların üstüne binen KDV
+ */
+export type RateComponent = { key: string; label: string; short_label?: string; base?: ComponentBase; baseline?: boolean; rate: number }
 export type TieredComponent = { key: string; label: string; short_label?: string; base?: ComponentBase; tiers: TaxTier[] }
 export type FixedComponent = {
   key: string
@@ -51,7 +57,15 @@ export type TaxFormula =
   | { type: 'none' }
   | { type: 'fixed_per_unit'; unit: string; components: FixedChainComponent[] }
 
-export type TaxLine = { key: string; label: string; shortLabel?: string; amount: number }
+export type TaxLine = {
+  key: string
+  label: string
+  shortLabel?: string
+  amount: number
+  /** baseline bileşen (KDV) için: çıplak matraha düşen kısım (matrah × rate). */
+  baseline?: boolean
+  baselineAmount?: number
+}
 
 /** İç hesap satırı — assemble() öncesi ham TL tutarlarıyla. */
 type RawLine = { key: string; label: string; shortLabel?: string; amount: number }
@@ -69,6 +83,12 @@ export type TaxResult = {
   breakdown: Record<string, number>
   /** totalTax / retailPrice — 0..1 arası. */
   taxRatio: number
+  /** matrah × (1 + Σ baseline oranlar): yalnız standart vergili (adil) fiyat. */
+  comparisonPrice: number
+  /** raf − comparisonPrice: ekstra vergiler + onların üstüne binen KDV. Görsel/bütçe bunu kullanır. */
+  excessTax: number
+  /** comparisonPrice − matrah: çıplak fiyatta da olacak vergi (baseline KDV). */
+  baselineTax: number
   /** Hesabın açıklama gerektiren yanları (kademe eşiğine sabitleme vb.). Normalde boş. */
   notes: string[]
 }
@@ -217,6 +237,8 @@ export function calculateTax(
   let matrah: number
   let rawLines: Array<RawLine>
 
+  let baselineRates: Array<{ key: string; rate: number }> = []
+
   if (formula.type === 'none' || formula.components.length === 0) {
     // Kitap (%0) ve bağış: vergisiz fiyat = raf fiyatı. Dürüstlük göstergesi (PRD §4.4).
     matrah = toTL(retailK)
@@ -226,13 +248,15 @@ export function calculateTax(
     matrah = solved.matrah
     rawLines = solved.lines
     notes.push(...solved.notes)
+    baselineRates = baselineRatesOf(formula.components)
   } else {
     const solved = solveFixedPerUnit(toTL(retailK), formula, options)
     matrah = solved.matrah
     rawLines = solved.lines
+    baselineRates = baselineRatesOf(formula.components)
   }
 
-  return assemble(retailK, matrah, rawLines, notes)
+  return assemble(retailK, matrah, rawLines, baselineRates, notes)
 }
 
 // ---------------------------------------------------------------------------
@@ -439,10 +463,18 @@ function solveFixedPerUnit(
  * Kuruş cinsinden toplar, artığı en büyük satıra vererek değişmezleri garanti eder.
  * (Float toplamı doğrudan yuvarlanırsa breakdown toplamı raf − vergisiz'den kayabilir.)
  */
+/** Formülün baseline (KDV) bileşenlerinin key+rate listesi. */
+function baselineRatesOf(components: Array<{ key: string; baseline?: boolean; rate?: number }>): Array<{ key: string; rate: number }> {
+  return components
+    .filter((c) => c.baseline && typeof c.rate === 'number')
+    .map((c) => ({ key: c.key, rate: c.rate as number }))
+}
+
 function assemble(
   retailK: number,
   matrah: number,
   rawLines: Array<RawLine>,
+  baselineRates: Array<{ key: string; rate: number }>,
   notes: string[]
 ): TaxResult {
   const taxFreeK = toKurus(matrah)
@@ -460,12 +492,31 @@ function assemble(
     lineKurus[largest] += roundingResidual
   }
 
-  const lines: TaxLine[] = rawLines.map((line, i) => ({
-    key: line.key,
-    label: line.label,
-    shortLabel: line.shortLabel,
-    amount: toTL(lineKurus[i]),
-  }))
+  // baseline türetmeleri: baseline bileşenin çıplak matraha düşen kısmı = matrah × rate.
+  // comparisonPrice = matrah + Σ baseline kısımlar; excessTax = raf − comparisonPrice.
+  let baselineTaxK = 0
+  const baselineByKey = new Map(baselineRates.map((b) => [b.key, b.rate]))
+
+  const lines: TaxLine[] = rawLines.map((line, i) => {
+    const baselineRate = baselineByKey.get(line.key)
+    if (baselineRate === undefined) {
+      return { key: line.key, label: line.label, shortLabel: line.shortLabel, amount: toTL(lineKurus[i]) }
+    }
+    // Çıplak matraha düşen kısım, satırın kendisini aşamaz (base:matrah baseline'da eşit).
+    const baselineK = Math.min(toKurus(matrah * baselineRate), lineKurus[i])
+    baselineTaxK += baselineK
+    return {
+      key: line.key,
+      label: line.label,
+      shortLabel: line.shortLabel,
+      amount: toTL(lineKurus[i]),
+      baseline: true,
+      baselineAmount: toTL(baselineK),
+    }
+  })
+
+  const comparisonK = taxFreeK + baselineTaxK
+  const excessTaxK = retailK - comparisonK
 
   const breakdown: Record<string, number> = {}
   for (const line of lines) breakdown[line.key] = line.amount
@@ -477,6 +528,9 @@ function assemble(
     lines,
     breakdown,
     taxRatio: totalTaxK / retailK,
+    comparisonPrice: toTL(comparisonK),
+    excessTax: toTL(excessTaxK),
+    baselineTax: toTL(baselineTaxK),
     notes,
   }
 }
