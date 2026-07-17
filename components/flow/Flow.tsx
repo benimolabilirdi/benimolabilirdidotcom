@@ -75,6 +75,14 @@ function ShockScreen({
 }) {
   const pct = Math.round(selection.taxRatio * 100)
 
+  // "Bir ___ daha alabilirdin" YALNIZCA vergi ≥ vergisiz fiyatsa (birebir doğru, şişirmez).
+  // Kaç tane: floor(vergi / vergisiz). Telefonda 1, pahalı ÖTV'li arabada 2+.
+  const extraUnits = Math.floor(selection.totalTax / selection.taxFreePrice)
+  const shockCopy =
+    extraUnits >= 1
+      ? `Ah be. Bu vergiyle ${extraUnits > 1 ? `${extraUnits} ` : 'bir '}${selection.unitNoun} daha alabilirdin. Ya da sen ne almak isterdin, hesaplayalım mı?`
+      : 'Ah be. Bu parayla neler alabilirdin, hesaplayalım mı?'
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', flexGrow: 1, gap: 18 }}>
       <button
@@ -129,8 +137,8 @@ function ShockScreen({
             {`ödediğinin %${pct}'i`}
           </span>
         </div>
-        <p style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 18, lineHeight: 1.35, color: 'var(--text-on-dark)', margin: '12px 0 0', maxWidth: 300 }}>
-          Ah be. Bu parayla neler alabilirdin, hesaplayalım mı?
+        <p style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 18, lineHeight: 1.35, color: 'var(--text-on-dark)', margin: '12px 0 0', maxWidth: 320 }}>
+          {shockCopy}
         </p>
       </div>
 

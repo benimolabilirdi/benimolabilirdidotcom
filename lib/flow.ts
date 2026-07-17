@@ -27,6 +27,8 @@ export type FlowCategory = {
 export type PurchaseSelection = {
   product: { name: string; emoji: string }
   categorySlug: string
+  /** "bir ___ daha alabilirdin" için sade ad (ürün adı ya da kategori adı). */
+  unitNoun: string
   retailPrice: number
   taxFreePrice: number
   totalTax: number
@@ -48,6 +50,7 @@ export function computeSelection(
   retailPrice: number,
   productName: string,
   emoji: string,
+  unitNoun: string,
   quantity?: number
 ): PurchaseSelection | null {
   try {
@@ -55,6 +58,7 @@ export function computeSelection(
     return {
       product: { name: productName, emoji },
       categorySlug: category.slug,
+      unitNoun,
       retailPrice: result.retailPrice,
       taxFreePrice: result.taxFreePrice,
       totalTax: result.totalTax,

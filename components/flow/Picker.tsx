@@ -88,7 +88,7 @@ function CategoryView({
   }, [category.products, query])
 
   function pickProduct(p: FlowCategory['products'][number]) {
-    const sel = computeSelection(category, p.retailPrice, p.name, p.emoji || category.emoji)
+    const sel = computeSelection(category, p.retailPrice, p.name, p.emoji || category.emoji, p.name)
     if (sel) onSelect(sel)
   }
 
@@ -218,7 +218,8 @@ function FreeAmount({
   const valid = amount > 0
 
   function submit() {
-    const sel = computeSelection(category, amount, `${category.name} (girdiğim tutar)`, category.emoji)
+    // Serbest tutarda "bir ___ daha" için sade kategori adı kullanılır.
+    const sel = computeSelection(category, amount, `${category.name} (girdiğim tutar)`, category.emoji, category.name.toLocaleLowerCase('tr'))
     if (!sel) {
       setError('Bu tutar hesaplanamadı, kontrol eder misin?')
       return
