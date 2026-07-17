@@ -1,11 +1,14 @@
 import { describe, it, expect } from 'vitest'
 import { calculateTax, assertValidFormula, type TaxFormula } from './tax'
 
-// docs/02-data-model.md §2'deki örnek formüller.
+// docs/02-data-model.md §2 + seed/categories.json. bandrol+fon base:matrah (toplamsal):
+// çarpan (1+0.12+0.01)=1.13, eski birleşik bandrol_fon(0.13) ile BİREBİR aynı değer,
+// sadece breakdown iki satıra bölünür (bandrol, fon).
 const TELEFON: TaxFormula = {
   type: 'chain',
   components: [
-    { key: 'bandrol_fon', label: 'TRT Bandrolü + Kültür Fonu', rate: 0.13 },
+    { key: 'bandrol', label: 'TRT Bandrolü', short_label: 'TRT payı', base: 'matrah', rate: 0.12 },
+    { key: 'fon', label: 'Kültür Fonu', short_label: 'fon', base: 'matrah', rate: 0.01 },
     {
       key: 'otv',
       label: 'ÖTV',
@@ -72,6 +75,69 @@ describe('kademesiz zincir', () => {
   })
 })
 
+describe('base:matrah (aynı tabana binen bileşenler)', () => {
+  // İki base:matrah bileşen (bandrol+fon) TOPLAMSAL: çarpan (1+0.12+0.01)=1.13,
+  // çarpımsal 1.12×1.01=1.1312 DEĞİL. Vergiyi şişirmez (docs/07 §5 A kararı).
+  const AYRI: TaxFormula = {
+    type: 'chain',
+    components: [
+      { key: 'bandrol', label: 'TRT Bandrolü', base: 'matrah', rate: 0.12 },
+      { key: 'fon', label: 'Kültür Fonu', base: 'matrah', rate: 0.01 },
+      { key: 'kdv', label: 'KDV', rate: 0.2 },
+    ],
+  }
+  const BIRLESIK: TaxFormula = {
+    type: 'chain',
+    components: [
+      { key: 'bandrol_fon', label: 'TRT + Fon', rate: 0.13 },
+      { key: 'kdv', label: 'KDV', rate: 0.2 },
+    ],
+  }
+
+  it('matrah tabanı toplamsaldır: birleşik %13 ile birebir aynı', () => {
+    const ayri = calculateTax(10000, AYRI)
+    const birlesik = calculateTax(10000, BIRLESIK)
+    expect(ayri.taxFreePrice).toBe(birlesik.taxFreePrice)
+    expect(ayri.totalTax).toBe(birlesik.totalTax)
+    // Çarpan 1.13: matrah = 10000 / (1.13 × 1.20) = 7374.63
+    expect(ayri.taxFreePrice).toBe(7374.63)
+  })
+
+  it('çarpımsal (base:chain) olsaydı vergi şişerdi — fark kanıtı', () => {
+    const carpimsal: TaxFormula = {
+      type: 'chain',
+      components: [
+        { key: 'bandrol', label: 'TRT', rate: 0.12 }, // base default chain
+        { key: 'fon', label: 'Fon', rate: 0.01 },
+        { key: 'kdv', label: 'KDV', rate: 0.2 },
+      ],
+    }
+    const additive = calculateTax(10000, AYRI)
+    const chained = calculateTax(10000, carpimsal)
+    // Çarpımsalda matrah daha küçük → vergi daha yüksek (şişme).
+    expect(chained.totalTax).toBeGreaterThan(additive.totalTax)
+  })
+
+  it('breakdown bandrol ve fon ayrı satır, ikisi de çıplak matrahtan', () => {
+    const result = calculateTax(10000, AYRI)
+    const matrah = result.taxFreePrice
+    expect(result.breakdown.bandrol).toBe(Math.round(matrah * 0.12 * 100) / 100)
+    expect(result.breakdown.fon).toBe(Math.round(matrah * 0.01 * 100) / 100)
+    expectInvariants(result)
+  })
+
+  it('base:matrah bileşen chain\'den sonra gelirse reddedilir', () => {
+    const bozuk = {
+      type: 'chain',
+      components: [
+        { key: 'kdv', label: 'KDV', rate: 0.2 }, // chain (default)
+        { key: 'bandrol', label: 'TRT', base: 'matrah', rate: 0.12 }, // sonra matrah — hata
+      ],
+    } as TaxFormula
+    expect(() => assertValidFormula(bozuk)).toThrow(RangeError)
+  })
+})
+
 describe('kademeli ÖTV', () => {
   it('PRD §4.2 telefon örneğini doğrular (119.000 TL → ~58.500 matrah)', () => {
     const result = calculateTax(119000, TELEFON)
@@ -123,7 +189,8 @@ describe('kademeli ÖTV', () => {
     expect(result.taxFreePrice).toBe(678.47)
     expect(result.totalTax).toBe(471.53)
     expect(result.taxFreePrice).toBeGreaterThan(640) // alt kademe kullanıldı, eşiğe sabitlenmedi
-    expect(result.breakdown.bandrol_fon).toBeCloseTo(88.2, 2)
+    // bandrol+fon toplamı eski birleşik değerle aynı (matrah 678.47 × 0.13).
+    expect(result.breakdown.bandrol + result.breakdown.fon).toBeCloseTo(88.2, 2)
     expect(result.breakdown.otv).toBeCloseTo(191.67, 1)
     expect(result.breakdown.kdv).toBeCloseTo(191.67, 1)
     expect(result.notes).toHaveLength(1)
@@ -285,7 +352,7 @@ describe('yuvarlama tutarlılığı', () => {
 
   it('döküm alanları DB şemasındaki anahtarlarla yazılır', () => {
     const result = calculateTax(119000, TELEFON)
-    expect(Object.keys(result.breakdown)).toEqual(['bandrol_fon', 'otv', 'kdv'])
+    expect(Object.keys(result.breakdown)).toEqual(['bandrol', 'fon', 'otv', 'kdv'])
   })
 })
 

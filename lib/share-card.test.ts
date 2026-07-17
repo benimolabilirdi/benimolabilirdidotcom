@@ -24,12 +24,8 @@ describe('taxComponentLabels', () => {
     const TELEFON: TaxFormula = {
       type: 'chain',
       components: [
-        {
-          key: 'bandrol_fon',
-          label: 'TRT Bandrolü + Kültür Fonu',
-          short_label: 'TRT payı + fon',
-          rate: 0.13,
-        },
+        { key: 'bandrol', label: 'TRT Bandrolü', short_label: 'TRT payı', base: 'matrah', rate: 0.12 },
+        { key: 'fon', label: 'Kültür Fonu', short_label: 'fon', base: 'matrah', rate: 0.01 },
         {
           key: 'otv',
           label: 'ÖTV',
@@ -44,8 +40,8 @@ describe('taxComponentLabels', () => {
     }
     const result = calculateTax(119000, TELEFON)
 
-    // short_label varsa o kullanılır (docs/07 §4).
-    expect(taxComponentLabels(result.lines)).toEqual(['ÖTV', 'KDV', 'TRT payı + fon'])
+    // Tutara göre sıralı, short_label ile (docs/07 §4): ÖTV > KDV > bandrol(0.12) > fon(0.01).
+    expect(taxComponentLabels(result.lines)).toEqual(['ÖTV', 'KDV', 'TRT payı', 'fon'])
   })
 
   it('vergisiz üründe boş dizi döner (kitap)', () => {

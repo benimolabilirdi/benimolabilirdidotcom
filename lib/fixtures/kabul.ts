@@ -34,8 +34,8 @@ const BASE: ShareCardData = {
   retailPrice: 119000,
   totalTax: 59400,
   // Telefonun gerçek bileşenleri, tutara göre (taxComponentLabels'ın üreteceği sıra).
-  // 'fon' short_label'dan gelir; bandrol+fon tek kalem (PRD §4.2 toplamalı çarpan).
-  taxComponents: ['ÖTV', 'KDV', 'TRT payı + fon'],
+  // bandrol+fon base:matrah ile ayrıldı → dört kalem, çarpan yine 1.13 (vergi şişmez).
+  taxComponents: ['ÖTV', 'KDV', 'TRT payı', 'fon'],
   remaining: 340, // 59.400 − 59.060
   items: ITEMS,
 }

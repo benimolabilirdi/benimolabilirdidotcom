@@ -32,6 +32,9 @@ export type PurchaseSelection = {
   totalTax: number
   taxRatio: number
   breakdown: Record<string, number>
+  /** Şok ekranı breakdown kartı için: sıralı + TAM etiketli (short_label değil — yer bol, resmi ad güven verir). */
+  lines: Array<{ label: string; amount: number }>
+  /** ShareCard p3 için: kısa etiketli, tutara göre sıralı. */
   taxComponents: string[]
 }
 
@@ -57,6 +60,7 @@ export function computeSelection(
       totalTax: result.totalTax,
       taxRatio: result.taxRatio,
       breakdown: result.breakdown,
+      lines: result.lines.map((l) => ({ label: l.label, amount: l.amount })),
       taxComponents: taxComponentLabels(result.lines),
     }
   } catch {

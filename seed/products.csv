@@ -1,11 +1,41 @@
 category_slug,name,emoji,retail_price,quantity,default_line_text,tags
 telefon,iPhone 17 256GB,📱,119000,,,
+telefon,Orta Segment Telefon,📱,24000,,,
+telefon,Yenilenmiş Telefon,📱,12000,,,
+beyaz-esya,Buzdolabı (No-Frost),🧊,28000,,,
+beyaz-esya,Çamaşır Makinesi,🌀,18000,,,
+beyaz-esya,Bulaşık Makinesi,🍽️,16000,,,
 beyaz-esya,Mutfak Robotu (orta segment),🥣,8900,,Anneme yeni bir mutfak robotu,"anneler-gunu,anne"
-tv,55 inç 4K Televizyon,📺,32000,,Salona yeni televizyon,"aile"
-oyun-konsolu,Oyun Konsolu + 2 Kol,🎮,28000,,Oğluma oyun konsolu,"dogum-gunu,cocuk"
+tv,43 inç 4K Televizyon,📺,14000,,,
+tv,55 inç 4K Televizyon,📺,22000,,Salona yeni televizyon,"aile"
+tv,65 inç 4K Televizyon,📺,34000,,,
+oyun-konsolu,PlayStation 5,🎮,28000,,Oğluma oyun konsolu,"dogum-gunu,cocuk"
+oyun-konsolu,Xbox Series,🎮,26000,,,
+oyun-konsolu,El Konsolu,🎮,12000,,,
+otomobil,Halk Otomobili (sedan),🚗,1150000,,,
+otomobil,Hatchback,🚗,950000,,,
+otomobil,İkinci El Otomobil,🚗,650000,,,
+kozmetik,Parfüm (100ml),🧴,3200,,,"sevgililer-gunu"
+kozmetik,Cilt Bakım Seti,🧴,1800,,,
+kozmetik,Ruj Seti,💄,900,,,
+kitap,Roman,📚,280,,Okumak istediğim roman,"kendim"
 kitap,1 Yıllık Kitap Aboneliği,📚,4200,,Bir yıllık kitaplarım,"kendim"
+kitap,Çocuk Kitap Seti,📚,650,,Çocuğuma kitaplar,"cocuk"
+kultur-sanat,Sinema Bileti x2,🎬,500,,,
 kultur-sanat,Tiyatro Bileti x4,🎭,3600,,Kuzenlerle tiyatro gecesi,"dogum-gunu,aile"
+kultur-sanat,Konser Bileti,🎫,1800,,,"sevgililer-gunu"
+tatil,Şehir Kaçamağı,🏨,6000,,,
 tatil,Kapadokya 2 Gece 2 Kişi,🎈,15000,,Kapadokya'da 2 gece,"sevgililer-gunu,es"
+tatil,Deniz Tatili 3 Gece,🏖️,22000,,Ailece deniz tatili,"aile"
+saglik,Check-up,🩺,3000,,,"kendim"
+saglik,Gözlük,👓,4500,,,
 saglik,Diş İmplantı (1 adet),🦷,18000,,Ertelediğim diş tedavisi,"kendim"
-oyuncak,LEGO Classic Büyük Set,🧸,2700,,Yeğenime LEGO seti,"dogum-gunu,yegen,yilbasi"
+egitim,Sınav Hazırlık Seti,📖,1500,,,"cocuk,okul-donemi"
+egitim,Online Kurs,🎓,2500,,Almak istediğim kurs,"kendim"
+egitim,Dil Kursu,📚,8000,,,
+oyuncak,Puzzle 1000 Parça,🧩,300,,,
+oyuncak,Peluş Ayı,🧸,400,,Yeğenime peluş,"cocuk,yegen"
+oyuncak,LEGO Classic Büyük Set,🧸,2700,,Yeğenime LEGO seti,"dogum-gunu,cocuk,yilbasi"
+bagis,Bir Çocuğa Kitap,📚,250,,Bir çocuğa kitap,
+bagis,Sıcak Yemek Bağışı,🍲,500,,Sıcak yemek bağışı,
 bagis,Depremzede Ailelere Katkı,❤️,5000,,Depremzedelere bağış,

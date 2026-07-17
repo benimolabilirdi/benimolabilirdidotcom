@@ -25,9 +25,17 @@ export type TaxTier = {
   rate: number
 }
 
-/** short_label: görselde kullanılan kısa ad (docs/07 §4). Yoksa label kullanılır. */
-export type RateComponent = { key: string; label: string; short_label?: string; rate: number }
-export type TieredComponent = { key: string; label: string; short_label?: string; tiers: TaxTier[] }
+/**
+ * base: bileşenin hangi tutar üzerinden hesaplandığı.
+ *  - 'chain' (varsayılan): önceki bileşenlerin biriktiği running tutar üzerinden (çarpımsal).
+ *  - 'matrah': çıplak matrah üzerinden (toplamsal). Aynı matraha binen bandrol+fon böyle:
+ *    raf = matrah × (1 + bandrol + fon) × (1+ÖTV) × (1+KDV) — biri diğerinin üstüne binmez.
+ * base:'matrah' bileşenler zincirde base:'chain' olanlardan ÖNCE gelmeli (doğrulanır).
+ * short_label: görselde kullanılan kısa ad (docs/07 §4). Yoksa label kullanılır.
+ */
+export type ComponentBase = 'chain' | 'matrah'
+export type RateComponent = { key: string; label: string; short_label?: string; base?: ComponentBase; rate: number }
+export type TieredComponent = { key: string; label: string; short_label?: string; base?: ComponentBase; tiers: TaxTier[] }
 export type FixedComponent = {
   key: string
   label: string
@@ -120,8 +128,18 @@ export function assertValidFormula(formula: TaxFormula): void {
         `Kademeli bileşen en fazla 1 olabilir (kapalı-form çözüm varsayımı), bulunan: ${tieredCount}`
       )
     }
+    let seenChain = false
     for (const c of formula.components) {
       assertOptionalShortLabel(c)
+      const base = c.base ?? 'chain'
+      if (base !== 'chain' && base !== 'matrah') {
+        throw new TypeError(`${c.key}.base 'chain' veya 'matrah' olmalı, alınan: ${String(c.base)}`)
+      }
+      // base:'matrah' bileşenler zincirin başında olmalı — sonra gelen chain onları tabana katamaz.
+      if (base === 'matrah' && seenChain) {
+        throw new RangeError(`${c.key}: base:'matrah' bileşenler base:'chain' olanlardan önce gelmeli`)
+      }
+      if (base === 'chain') seenChain = true
       if (isTiered(c)) assertValidTiers(c)
       else assertRate(c.rate, `${c.key}.rate`)
     }
@@ -240,7 +258,7 @@ function solveChain(retail: number, components: ChainComponent[]): ChainSolution
   // Kademesiz zincir: tek çarpan, tek bölme.
   if (tieredIndex === -1) {
     const rates = components.map((c) => (c as RateComponent).rate)
-    const matrah = retail / multiplierOf(rates)
+    const matrah = retail / multiplierOf(components, rates)
     return { matrah, lines: forwardChain(matrah, components, rates), notes: [] }
   }
 
@@ -252,7 +270,7 @@ function solveChain(retail: number, components: ChainComponent[]): ChainSolution
     const rates = ratesForTier(components, tieredIndex, tier.rate)
     return {
       rates,
-      matrah: retail / multiplierOf(rates),
+      matrah: retail / multiplierOf(components, rates),
       lower: i === 0 ? 0 : (tiered.tiers[i - 1].max_matrah as number),
       upper: tier.max_matrah ?? Infinity,
     }
@@ -331,7 +349,22 @@ function ratesForTier(components: ChainComponent[], tieredIndex: number, tierRat
   return components.map((c, i) => (i === tieredIndex ? tierRate : (c as RateComponent).rate))
 }
 
-const multiplierOf = (rates: number[]): number => rates.reduce((acc, rate) => acc * (1 + rate), 1)
+const baseOf = (c: ChainComponent): ComponentBase => c.base ?? 'chain'
+
+/**
+ * Zincir çarpanı. base:'matrah' bileşenler tek bir (1 + Σrate) faktörüne toplanır (aynı
+ * tabana biner), base:'chain' bileşenler ayrı ayrı (1+rate) ile çarpar.
+ * raf = matrah × (1 + Σmatrah) × Π(1 + chain).
+ */
+function multiplierOf(components: ChainComponent[], rates: number[]): number {
+  let matrahSum = 0
+  let chainProduct = 1
+  components.forEach((c, i) => {
+    if (baseOf(c) === 'matrah') matrahSum += rates[i]
+    else chainProduct *= 1 + rates[i]
+  })
+  return (1 + matrahSum) * chainProduct
+}
 
 /** Matrahtan ileri yürüyerek her bileşenin TL tutarını yazar (docs/02 §2). */
 function forwardChain(
@@ -341,7 +374,8 @@ function forwardChain(
 ): Array<RawLine> {
   let running = matrah
   return components.map((component, i) => {
-    const amount = running * rates[i]
+    // base:'matrah' çıplak matrah üzerinden; base:'chain' biriken running üzerinden.
+    const amount = (baseOf(component) === 'matrah' ? matrah : running) * rates[i]
     running += amount
     return { key: component.key, label: component.label, shortLabel: component.short_label, amount }
   })

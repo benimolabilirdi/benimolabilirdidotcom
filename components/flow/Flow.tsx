@@ -111,10 +111,10 @@ function ShockStub({ selection, onBack }: { selection: PurchaseSelection; onBack
           boxShadow: 'var(--shadow-sm)',
         }}
       >
-        {Object.entries(selection.breakdown).map(([key, amount]) => (
-          <div key={key} style={{ display: 'flex', justifyContent: 'space-between', fontFamily: 'var(--font-ui)', fontSize: 15 }}>
-            <span style={{ color: 'var(--text-muted)' }}>{key}</span>
-            <span style={{ fontVariantNumeric: 'tabular-nums', fontWeight: 700 }}>{formatTL(amount)}</span>
+        {selection.lines.map((line) => (
+          <div key={line.label} style={{ display: 'flex', justifyContent: 'space-between', fontFamily: 'var(--font-ui)', fontSize: 15 }}>
+            <span style={{ color: 'var(--text-muted)' }}>{line.label}</span>
+            <span style={{ fontVariantNumeric: 'tabular-nums', fontWeight: 700 }}>{formatTL(line.amount)}</span>
           </div>
         ))}
         <div style={{ height: 1, background: 'var(--cream-300)', margin: '4px 0' }} />
@@ -125,6 +125,22 @@ function ShockStub({ selection, onBack }: { selection: PurchaseSelection; onBack
           </span>
         </div>
       </div>
+
+      {/* İtibar sigortası: şüpheci kullanıcıyı tam şüphe anında yakala (PRD §3.4). */}
+      <a
+        href="/hesap"
+        style={{
+          alignSelf: 'flex-start',
+          fontFamily: 'var(--font-ui)',
+          fontSize: 14,
+          fontWeight: 600,
+          color: 'var(--text-muted)',
+          textDecoration: 'underline',
+          textUnderlineOffset: 3,
+        }}
+      >
+        Nasıl hesapladık? →
+      </a>
 
       <p style={{ fontFamily: 'var(--font-ui)', fontSize: 13, color: 'var(--text-faint)', margin: 0 }}>
         (C3: count-up animasyon + hayal döngüsüne geçiş burada gelecek)
