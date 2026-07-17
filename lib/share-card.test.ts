@@ -88,20 +88,20 @@ describe('fitItems — liste kapasitesi (docs/03 §4)', () => {
     Array.from({ length: n }, (_, i) => ({ emoji: '🎁', text: `Şey ${i}`, amount: 100 }))
 
   it('sığıyorsa hepsi görünür, taşma yok', () => {
-    expect(fitItems(items(5), 'story')).toEqual({ visible: items(5), overflow: 0 })
+    expect(fitItems(items(5), 'story')).toEqual({ visible: items(5), hidden: [] })
   })
 
-  it('taşarsa son satırı özet satırına bırakır', () => {
-    // Story 7 satır alır; 10 kalemde 6 görünür + "ve 4 şey daha".
-    const { visible, overflow } = fitItems(items(10), 'story')
-    expect(visible).toHaveLength(6)
-    expect(overflow).toBe(4)
-    expect(visible.length + overflow).toBe(10)
+  it('taşarsa son satırı kompakt özete bırakır, taşanlar hidden[]', () => {
+    // Story 9 satır alır; 12 kalemde 8 görünür + 4 gizli (emoji özeti).
+    const { visible, hidden } = fitItems(items(12), 'story')
+    expect(visible).toHaveLength(8)
+    expect(hidden).toHaveLength(4)
+    expect(visible.length + hidden.length).toBe(12)
   })
 
   it('OG en dar: 3 satır', () => {
-    const { visible, overflow } = fitItems(items(6), 'og')
+    const { visible, hidden } = fitItems(items(6), 'og')
     expect(visible).toHaveLength(2)
-    expect(overflow).toBe(4)
+    expect(hidden).toHaveLength(4)
   })
 })

@@ -94,8 +94,8 @@ export const FORMATS: Record<
   ShareCardFormat,
   { w: number; h: number; label: string; ratio: string; maxRows: number }
 > = {
-  story: { w: 1080, h: 1920, label: 'Story', ratio: '9:16', maxRows: 7 },
-  post: { w: 1080, h: 1350, label: 'Post', ratio: '4:5', maxRows: 5 },
+  story: { w: 1080, h: 1920, label: 'Story', ratio: '9:16', maxRows: 9 },
+  post: { w: 1080, h: 1350, label: 'Post', ratio: '4:5', maxRows: 6 },
   square: { w: 1080, h: 1080, label: 'Kare', ratio: '1:1', maxRows: 4 },
   og: { w: 1200, h: 630, label: 'Link önizleme', ratio: '1.91:1', maxRows: 3 },
 }
@@ -106,13 +106,14 @@ export function formatTL(amount: number): string {
 }
 
 /**
- * Liste kapasitesi (docs/03 §4): fazlası son satır yerine "➕ ve N şey daha…".
- * Taşma varsa görünen satır sayısı bir eksilir — özet satırı onun yerini alır.
+ * Liste kapasitesi (docs/03 §4): fazlası son satır yerine kompakt özet (taşan kalemlerin
+ * emoji'leri + "ve N şey daha"). Taşma varsa görünen satır bir eksilir — özet onun yerini alır.
+ * hidden[] taşan kalemleri taşır (emoji gösterimi için).
  */
-export function fitItems(items: WishItem[], format: ShareCardFormat) {
+export function fitItems(items: WishItem[], format: ShareCardFormat): { visible: WishItem[]; hidden: WishItem[] } {
   const { maxRows } = FORMATS[format]
-  if (items.length <= maxRows) return { visible: items, overflow: 0 }
-  return { visible: items.slice(0, maxRows - 1), overflow: items.length - (maxRows - 1) }
+  if (items.length <= maxRows) return { visible: items, hidden: [] }
+  return { visible: items.slice(0, maxRows - 1), hidden: items.slice(maxRows - 1) }
 }
 
 /** Palet — tasarım sistemi tokens/colors.css'ten LİTERAL değerler (satori var() çözemez). */

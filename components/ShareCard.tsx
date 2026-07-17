@@ -230,9 +230,28 @@ function WishRow({ item, s }: { item: WishItem; s: number }) {
   )
 }
 
+/** Taşan kalemlerin kompakt gösterimi: emoji'ler + "ve N şey daha". */
+function OverflowRow({ hidden, s }: { hidden: WishItem[]; s: number }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 8 * s, paddingLeft: 6 * s, marginTop: 2 * s }}>
+      <span style={{ display: 'flex', fontSize: 30 * s, color: C.muted }}>➕</span>
+      {hidden.slice(0, 8).map((item, i) => (
+        <span key={i} style={{ display: 'flex', fontSize: 34 * s, lineHeight: 1 }}>
+          {item.emoji}
+        </span>
+      ))}
+      <span style={{ display: 'flex', fontSize: 28 * s, color: C.muted, fontWeight: 600 }}>
+        {`ve ${hidden.length} şey daha`}
+      </span>
+    </div>
+  )
+}
+
 export function ShareCard({ format = 'story', data, scale = 1 }: Props) {
   const f = FORMATS[format]
-  const { visible, overflow } = fitItems(data.items, format)
+  const { visible, hidden } = fitItems(data.items, format)
+  // Çok kalem varsa satırları sıkıştır (daha fazlası sığsın, kaybolmasın).
+  const density = visible.length <= 5 ? 1 : visible.length <= 7 ? 0.9 : 0.82
 
   const shell: React.CSSProperties = {
     width: f.w,
@@ -337,11 +356,7 @@ export function ShareCard({ format = 'story', data, scale = 1 }: Props) {
             {visible.map((item, i) => (
               <WishRow key={i} item={item} s={0.6} />
             ))}
-            {overflow > 0 ? (
-              <div style={{ display: 'flex', fontSize: 24, color: C.muted, paddingLeft: 12 }}>
-                {`➕ ve ${overflow} şey daha…`}
-              </div>
-            ) : null}
+            {hidden.length > 0 ? <OverflowRow hidden={hidden} s={0.6} /> : null}
           </div>
           <div style={{ display: 'flex', fontSize: 22, fontWeight: 600, color: C.inkSoft, marginTop: 16 }}>
             benimolabilirdi.com
@@ -419,16 +434,12 @@ export function ShareCard({ format = 'story', data, scale = 1 }: Props) {
         </div>
       </div>
 
-      {/* hayal listesi */}
-      <div style={{ display: 'flex', flexDirection: 'column', flexGrow: 1, gap: 14 * s, marginTop: 26 * s }}>
+      {/* hayal listesi — çok kalemde satırlar density ile sıkışır */}
+      <div style={{ display: 'flex', flexDirection: 'column', flexGrow: 1, gap: 14 * s * density, marginTop: 26 * s }}>
         {visible.map((item, i) => (
-          <WishRow key={i} item={item} s={s} />
+          <WishRow key={i} item={item} s={s * density} />
         ))}
-        {overflow > 0 ? (
-          <div style={{ display: 'flex', fontSize: 30 * s, color: C.muted, paddingLeft: 18 * s, marginTop: 4 * s }}>
-            {`➕ ve ${overflow} şey daha…`}
-          </div>
-        ) : null}
+        {hidden.length > 0 ? <OverflowRow hidden={hidden} s={s} /> : null}
       </div>
 
       {/* kalan — yeşil kutu */}
