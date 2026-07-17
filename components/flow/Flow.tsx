@@ -2,19 +2,22 @@
 
 /**
  * Kullanıcı akışı kabuğu (Faz C). Adım durumu client'ta (stateless, DB'ye yazım yok).
- * Şu an: picker (C2) → şok stub. C3 şok, C4 hayal döngüsü, C5 paylaşım buraya eklenecek.
+ * picker (C2) → shock (C3) → dream (C4). Şok ekranı lacivert yüzey = duygusal zirve.
  */
 import { useState } from 'react'
 import { Picker } from '@/components/flow/Picker'
+import { CountUp } from '@/components/CountUp'
 import { Wordmark } from '@/components/Wordmark'
 import { formatTL } from '@/lib/share-card'
 import type { FlowCategory, PurchaseSelection } from '@/lib/flow'
 
-type Step = 'picker' | 'shock'
+type Step = 'picker' | 'shock' | 'dream'
 
 export function Flow({ categories }: { categories: FlowCategory[] }) {
   const [step, setStep] = useState<Step>('picker')
   const [selection, setSelection] = useState<PurchaseSelection | null>(null)
+
+  const onDark = step === 'shock'
 
   return (
     <main
@@ -26,10 +29,13 @@ export function Flow({ categories }: { categories: FlowCategory[] }) {
         flexDirection: 'column',
         padding: '24px 20px 32px',
         gap: 20,
+        background: onDark ? 'var(--surface-navy)' : 'var(--bg-page)',
+        color: onDark ? 'var(--text-on-dark)' : 'var(--text-body)',
+        transition: 'background 300ms ease',
       }}
     >
       <div style={{ display: 'flex', justifyContent: 'center' }}>
-        <Wordmark size={18} />
+        <Wordmark size={18} color={onDark ? 'var(--text-on-dark)' : 'var(--navy-800)'} />
       </div>
 
       {step === 'picker' ? (
@@ -40,27 +46,44 @@ export function Flow({ categories }: { categories: FlowCategory[] }) {
             setStep('shock')
           }}
         />
-      ) : selection ? (
-        <ShockStub selection={selection} onBack={() => setStep('picker')} />
+      ) : null}
+
+      {step === 'shock' && selection ? (
+        <ShockScreen
+          selection={selection}
+          onBack={() => setStep('picker')}
+          onDream={() => setStep('dream')}
+        />
+      ) : null}
+
+      {step === 'dream' && selection ? (
+        <DreamStub selection={selection} onBack={() => setStep('shock')} />
       ) : null}
     </main>
   )
 }
 
-/**
- * Şok ekranı stub'ı — C3'te count-up animasyon + tam breakdown gelecek.
- * Şimdilik lib/tax.ts'in canlı akıştaki çıktısını doğruluyor.
- */
-function ShockStub({ selection, onBack }: { selection: PurchaseSelection; onBack: () => void }) {
+/** Şok ekranı (C3, docs/01 §3.1.3, ui_kits Shock.jsx). Count-up + breakdown + geçiş. */
+function ShockScreen({
+  selection,
+  onBack,
+  onDream,
+}: {
+  selection: PurchaseSelection
+  onBack: () => void
+  onDream: () => void
+}) {
+  const pct = Math.round(selection.taxRatio * 100)
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', flexGrow: 1, gap: 18 }}>
       <button
         onClick={onBack}
         style={{
           alignSelf: 'flex-start',
           background: 'none',
           border: 'none',
-          color: 'var(--text-muted)',
+          color: 'var(--navy-300)',
           fontFamily: 'var(--font-ui)',
           fontSize: 15,
           fontWeight: 600,
@@ -71,62 +94,72 @@ function ShockStub({ selection, onBack }: { selection: PurchaseSelection; onBack
         ← Baştan seç
       </button>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-        <span style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 22 }}>
-          {selection.product.emoji} {selection.product.name}
-        </span>
-        <span style={{ fontFamily: 'var(--font-ui)', fontSize: 16, color: 'var(--text-muted)' }}>
-          {formatTL(selection.retailPrice)} ödedin.
-        </span>
+      {/* ürün + ödenen */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <span style={{ fontSize: 34, lineHeight: 1 }}>{selection.product.emoji}</span>
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <span style={{ fontFamily: 'var(--font-ui)', fontWeight: 700, fontSize: 17 }}>
+            {selection.product.name}
+          </span>
+          <span style={{ fontFamily: 'var(--font-ui)', fontVariantNumeric: 'tabular-nums', fontSize: 14, color: 'var(--navy-300)' }}>
+            {formatTL(selection.retailPrice)} ödedin
+          </span>
+        </div>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-        <span style={{ fontFamily: 'var(--font-ui)', fontSize: 15, color: 'var(--text-muted)' }}>Bunun</span>
-        <span
-          style={{
-            fontFamily: 'var(--font-ui)',
-            fontVariantNumeric: 'tabular-nums',
-            fontWeight: 800,
-            fontSize: 56,
-            color: 'var(--coral-500)',
-            lineHeight: 1.05,
-            letterSpacing: '-0.02em',
-          }}
-        >
-          {`${formatTL(selection.totalTax)}'si`}
+      {/* şok zirvesi */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '10px 0' }}>
+        <span style={{ fontFamily: 'var(--font-ui)', fontSize: 16, fontWeight: 600, color: 'var(--navy-300)' }}>
+          Bunun vergisi:
         </span>
-        <span style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 18, color: 'var(--coral-600)' }}>
-          {`${selection.taxComponents.join(' + ')} (ödediğinin %${Math.round(selection.taxRatio * 100)}'i)`}
-        </span>
+        <CountUp value={selection.totalTax} fontSize={68} />
+        <div style={{ display: 'flex', marginTop: 6 }}>
+          <span
+            style={{
+              display: 'inline-flex',
+              background: 'var(--coral-500)',
+              color: '#fff',
+              fontFamily: 'var(--font-ui)',
+              fontSize: 14,
+              fontWeight: 700,
+              padding: '6px 14px',
+              borderRadius: 'var(--r-pill)',
+            }}
+          >
+            {`ödediğinin %${pct}'i`}
+          </span>
+        </div>
+        <p style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 18, lineHeight: 1.35, color: 'var(--text-on-dark)', margin: '12px 0 0', maxWidth: 300 }}>
+          Ah be. Bu parayla neler alabilirdin, hesaplayalım mı?
+        </p>
       </div>
 
+      {/* breakdown — tam etiketli (lines[]), lacivert-soft kart */}
       <div
         style={{
           display: 'flex',
           flexDirection: 'column',
           gap: 8,
-          background: 'var(--surface-card)',
+          background: 'var(--surface-navy-soft, #2A3A61)',
           borderRadius: 'var(--r-lg)',
           padding: 16,
-          boxShadow: 'var(--shadow-sm)',
         }}
       >
         {selection.lines.map((line) => (
           <div key={line.label} style={{ display: 'flex', justifyContent: 'space-between', fontFamily: 'var(--font-ui)', fontSize: 15 }}>
-            <span style={{ color: 'var(--text-muted)' }}>{line.label}</span>
+            <span style={{ color: 'var(--navy-300)' }}>{line.label}</span>
             <span style={{ fontVariantNumeric: 'tabular-nums', fontWeight: 700 }}>{formatTL(line.amount)}</span>
           </div>
         ))}
-        <div style={{ height: 1, background: 'var(--cream-300)', margin: '4px 0' }} />
+        <div style={{ height: 1, background: 'rgba(250,243,232,0.16)', margin: '4px 0' }} />
         <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: 'var(--font-ui)', fontSize: 15 }}>
-          <span style={{ color: 'var(--positive)', fontWeight: 700 }}>Vergisiz fiyat</span>
-          <span style={{ fontVariantNumeric: 'tabular-nums', fontWeight: 700, color: 'var(--positive)' }}>
+          <span style={{ color: 'var(--green-300, #8FC4AC)', fontWeight: 700 }}>Vergisiz fiyat</span>
+          <span style={{ fontVariantNumeric: 'tabular-nums', fontWeight: 700, color: 'var(--green-300, #8FC4AC)' }}>
             {formatTL(selection.taxFreePrice)}
           </span>
         </div>
       </div>
 
-      {/* İtibar sigortası: şüpheci kullanıcıyı tam şüphe anında yakala (PRD §3.4). */}
       <a
         href="/hesap"
         style={{
@@ -134,7 +167,7 @@ function ShockStub({ selection, onBack }: { selection: PurchaseSelection; onBack
           fontFamily: 'var(--font-ui)',
           fontSize: 14,
           fontWeight: 600,
-          color: 'var(--text-muted)',
+          color: 'var(--navy-300)',
           textDecoration: 'underline',
           textUnderlineOffset: 3,
         }}
@@ -142,8 +175,43 @@ function ShockStub({ selection, onBack }: { selection: PurchaseSelection; onBack
         Nasıl hesapladık? →
       </a>
 
-      <p style={{ fontFamily: 'var(--font-ui)', fontSize: 13, color: 'var(--text-faint)', margin: 0 }}>
-        (C3: count-up animasyon + hayal döngüsüne geçiş burada gelecek)
+      {/* geçiş CTA — hayal döngüsü */}
+      <button
+        onClick={onDream}
+        style={{
+          marginTop: 'auto',
+          background: 'var(--coral-500)',
+          color: '#fff',
+          border: 'none',
+          borderRadius: 'var(--r-pill)',
+          padding: '16px 24px',
+          fontFamily: 'var(--font-ui)',
+          fontSize: 18,
+          fontWeight: 700,
+          cursor: 'pointer',
+        }}
+      >
+        Bu parayla ne alırdım? →
+      </button>
+    </div>
+  )
+}
+
+/** Hayal döngüsü stub — C4'te bütçe barı + kategori→etiket→ürün→metin + döngü mantığı gelecek. */
+function DreamStub({ selection, onBack }: { selection: PurchaseSelection; onBack: () => void }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <button
+        onClick={onBack}
+        style={{ alignSelf: 'flex-start', background: 'none', border: 'none', color: 'var(--text-muted)', fontFamily: 'var(--font-ui)', fontSize: 15, fontWeight: 600, cursor: 'pointer', padding: 0 }}
+      >
+        ← Şok ekranı
+      </button>
+      <h1 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 24, margin: 0 }}>
+        Bu {formatTL(selection.totalTax)}&apos;yi nerede harcardın?
+      </h1>
+      <p style={{ fontFamily: 'var(--font-ui)', fontSize: 15, color: 'var(--text-muted)' }}>
+        (C4: bütçe barı + kategori→etiket→ürün→kişisel metin + döngü sonu burada gelecek.)
       </p>
     </div>
   )
