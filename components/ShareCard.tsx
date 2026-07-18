@@ -136,9 +136,26 @@ function ShockBlock({
   )
 }
 
-/** docs/07 §5 kapanış: DS yeşil kutu. kalan < 40 TL → 🥨 (simit parası), değilse 🎈. */
+/**
+ * Kapanış mesajı (Oğuzhan). 50 TL ve altı için simit/çay senaryoları; üstünde sade.
+ *   <25 → "X kaldı, (25−X) daha ilave eder simit yerim"
+ *   =25 → "25 kaldı, simit parası"
+ *   25<x<50 → "X kaldı, (50−X) daha ilave eder kendime bir simit bir çay ısmarlarım"
+ *   =50 → "50 kaldı, kendime bir simit ve bir çay ısmarlarım"
+ *   >50 → "X kaldı"
+ */
+function pocketMessage(remaining: number): { emoji: string; text: string } {
+  const r = Math.round(remaining)
+  if (r < 25) return { emoji: '🥨', text: `Cebimde ${formatTL(r)} kaldı, ${formatTL(25 - r)} daha ilave eder simit yerim` }
+  if (r === 25) return { emoji: '🥨', text: 'Cebimde 25 TL kaldı, simit parası' }
+  if (r < 50) return { emoji: '☕', text: `Cebimde ${formatTL(r)} kaldı, ${formatTL(50 - r)} daha ilave eder kendime bir simit bir çay ısmarlarım` }
+  if (r === 50) return { emoji: '☕', text: 'Cebimde 50 TL kaldı, kendime bir simit ve bir çay ısmarlarım' }
+  return { emoji: '🎈', text: `Cebimde ${formatTL(r)} kaldı` }
+}
+
+/** docs/07 §5 kapanış: DS yeşil kutu. */
 function PocketBox({ remaining, s }: { remaining: number; s: number }) {
-  const tiny = remaining < 40
+  const { emoji, text } = pocketMessage(remaining)
   return (
     <div
       style={{
@@ -150,7 +167,7 @@ function PocketBox({ remaining, s }: { remaining: number; s: number }) {
         padding: `${24 * s}px ${30 * s}px`,
       }}
     >
-      <div style={{ display: 'flex', fontSize: 46 * s, lineHeight: 1 }}>{tiny ? '🥨' : '🎈'}</div>
+      <div style={{ display: 'flex', fontSize: 46 * s, lineHeight: 1 }}>{emoji}</div>
       <div
         style={{
           display: 'flex',
@@ -161,7 +178,7 @@ function PocketBox({ remaining, s }: { remaining: number; s: number }) {
           lineHeight: 1.25,
         }}
       >
-        {`Cebimde ${formatTL(remaining)} kaldı${tiny ? ' — simit parası' : ''}`}
+        {text}
       </div>
     </div>
   )
@@ -364,8 +381,8 @@ export function ShareCard({ format = 'story', data, scale = 1 }: Props) {
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', flexGrow: 1, justifyContent: 'center' }}>
-          <div style={{ display: 'flex', fontFamily: FONT_DISPLAY, fontSize: 28, fontWeight: 800, marginBottom: 14 }}>
-            ✨ Şunlar da benim olabilirdi:
+          <div style={{ display: 'flex', flexWrap: 'wrap', fontFamily: FONT_DISPLAY, fontSize: 22, fontWeight: 800, marginBottom: 12, lineHeight: 1.2 }}>
+            ✨ Bunları da alabilir, ekonomiye can verebilirdim!
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {visible.map((item, i) => (
@@ -437,14 +454,14 @@ export function ShareCard({ format = 'story', data, scale = 1 }: Props) {
           style={{
             display: 'flex',
             fontFamily: FONT_DISPLAY,
-            fontSize: 48 * hero,
+            fontSize: 40 * hero,
             fontWeight: 800,
-            lineHeight: 1.2,
+            lineHeight: 1.18,
           }}
         >
-          ✨ Şunlar da benim olabilirdi:
+          ✨ Bunları da alabilir, ekonomiye can verebilirdim!
         </div>
-        <div style={{ display: 'flex', marginTop: 2 * s }}>
+        <div style={{ display: 'flex', marginTop: 4 * s }}>
           <WavyUnderline width={380 * s} color={C.accent} />
         </div>
       </div>

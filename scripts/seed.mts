@@ -287,6 +287,8 @@ const productRows = computed.map((item) => ({
   tax_formula: item.variant ? item.formula : null,
   quantity: item.row.quantity ? Number(item.row.quantity) : null,
   sort_order: item.sortOrder,
+  // Aksesuar/kol ana alımda seçilemez (hayalde görünür). "... Kol" ile biten ürünler.
+  is_purchasable: !item.row.name.trim().endsWith('Kol'),
   price_updated_at: new Date().toISOString(),
 }))
 

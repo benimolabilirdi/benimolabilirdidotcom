@@ -30,7 +30,7 @@ function Grid({ categories, onPick }: { categories: FlowCategory[]; onPick: (slu
       <h1 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 28, lineHeight: 1.15, margin: 0 }}>
         Ne aldın?
       </h1>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 12 }}>
         {categories.map((c) => (
           <button
             key={c.slug}
@@ -41,6 +41,7 @@ function Grid({ categories, onPick }: { categories: FlowCategory[]; onPick: (slu
               alignItems: 'center',
               justifyContent: 'center',
               gap: 8,
+              minWidth: 0,
               background: 'var(--surface-card)',
               border: 'none',
               borderRadius: 'var(--r-lg)',
@@ -84,7 +85,10 @@ function CategoryView({
 
   const filtered = useMemo(() => {
     const q = query.trim().toLocaleLowerCase('tr')
-    return q ? category.products.filter((p) => p.name.toLocaleLowerCase('tr').includes(q)) : category.products
+    // Ana alımda yalnız isPurchasable ürünler (kol vb. hariç), pahalıdan ucuza.
+    const base = category.products.filter((p) => p.isPurchasable)
+    const list = q ? base.filter((p) => p.name.toLocaleLowerCase('tr').includes(q)) : base
+    return [...list].sort((a, b) => b.retailPrice - a.retailPrice)
   }, [category.products, query])
 
   function pickProduct(p: FlowCategory['products'][number]) {

@@ -22,6 +22,8 @@ export type FlowProduct = {
   taxFormula: TaxFormula | null
   /** fixed_per_unit (akaryakıt) hesabı için litre. */
   quantity: number | null
+  /** Ana "aldım" akışında seçilebilir mi (ör. kol=false, hayalde görünür). */
+  isPurchasable: boolean
 }
 
 /** Hazır söz (docs/08). Serbest metin yerine kullanıcı bunlardan seçer. */

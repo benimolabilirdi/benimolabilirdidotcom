@@ -191,11 +191,12 @@ function ShockScreen({
         Nasıl hesapladık? →
       </a>
 
-      {/* geçiş CTA — hayal döngüsü */}
+      {/* geçiş CTA — hayal döngüsü. marginTop:auto YOK: içerik uzun olunca butonu
+          100vh dibine itip adres çubuğu görünürken ekran dışına atıyordu. */}
       <button
         onClick={onDream}
         style={{
-          marginTop: 'auto',
+          marginTop: 8,
           background: 'var(--coral-500)',
           color: '#fff',
           border: 'none',

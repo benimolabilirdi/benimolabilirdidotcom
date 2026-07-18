@@ -294,12 +294,12 @@ function Chooser({
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
       <BackLink onClick={onBack} />
       <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 22, margin: 0 }}>{title}</h2>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 12 }}>
         {options.map((o) => (
           <button
             key={o.key}
             onClick={() => onPick(o.key)}
-            style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, background: 'var(--surface-card)', border: 'none', borderRadius: 'var(--r-lg)', padding: '18px 6px', boxShadow: 'var(--shadow-sm)', cursor: 'pointer', aspectRatio: '1 / 1' }}
+            style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, minWidth: 0, background: 'var(--surface-card)', border: 'none', borderRadius: 'var(--r-lg)', padding: '18px 6px', boxShadow: 'var(--shadow-sm)', cursor: 'pointer', aspectRatio: '1 / 1' }}
           >
             <span style={{ fontSize: 34 }}>{o.emoji}</span>
             <span style={{ fontFamily: 'var(--font-ui)', fontSize: 12, fontWeight: 600, textAlign: 'center', lineHeight: 1.2, color: 'var(--text-body)' }}>{o.label}</span>
@@ -321,8 +321,10 @@ function ProductList({
   onPick: (p: FlowProduct) => void
   onBack: () => void
 }) {
-  // Sadece kalan bütçeyle alınabilecek ürünler (adil fiyat ≤ kalan, docs/08).
-  const affordable = category.products.filter((p) => p.comparisonPrice <= remaining && p.comparisonPrice > 0)
+  // Sadece kalan bütçeyle alınabilecek ürünler (adil fiyat ≤ kalan, docs/08), pahalıdan ucuza.
+  const affordable = category.products
+    .filter((p) => p.comparisonPrice <= remaining && p.comparisonPrice > 0)
+    .sort((a, b) => b.comparisonPrice - a.comparisonPrice)
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
       <BackLink onClick={onBack} />
