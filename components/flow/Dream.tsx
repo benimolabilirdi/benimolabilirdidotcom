@@ -49,6 +49,14 @@ export function Dream({
     [categories]
   )
 
+  // Kalan bütçeyle o kategoride alınabilecek en az bir ürün var mı? (docs/01 §3.1.4 filtre)
+  const affordableCategories = useMemo(
+    () => dreamCategories.filter((c) => c.products.some((p) => p.taxFreePrice > 0 && p.taxFreePrice <= remaining)),
+    [dreamCategories, remaining]
+  )
+  const canSelfOrGift = affordableCategories.length > 0
+  const canDonate = !!bagis?.products.some((p) => p.taxFreePrice > 0 && p.taxFreePrice <= remaining)
+
   // Kataloğun en ucuz vergisiz fiyatı — bitiş eşiği (docs/01 §3.1.4f).
   const cheapest = useMemo(() => {
     const prices = categories
@@ -87,6 +95,9 @@ export function Dream({
       {step === 'root' ? (
         <Root
           hasItems={items.length > 0}
+          showSelf={canSelfOrGift}
+          showGift={canSelfOrGift}
+          showDonation={canDonate}
           onSelf={() => {
             setMode('self')
             setStep('category')
@@ -121,9 +132,9 @@ export function Dream({
         <Chooser
           title={mode === 'gift' && recipient ? `${recipient.name} ne?` : 'Ne alırdın?'}
           onBack={() => setStep(mode === 'gift' ? 'recipient' : 'root')}
-          options={dreamCategories.map((c) => ({ key: c.slug, emoji: c.emoji, label: c.name }))}
+          options={affordableCategories.map((c) => ({ key: c.slug, emoji: c.emoji, label: c.name }))}
           onPick={(key) => {
-            setCategory(dreamCategories.find((c) => c.slug === key) ?? null)
+            setCategory(affordableCategories.find((c) => c.slug === key) ?? null)
             setStep('product')
           }}
         />
@@ -184,6 +195,9 @@ function BudgetBar({ remaining, total, count }: { remaining: number; total: numb
 
 function Root({
   hasItems,
+  showSelf,
+  showGift,
+  showDonation,
   onSelf,
   onGift,
   onDonation,
@@ -191,6 +205,9 @@ function Root({
   onBack,
 }: {
   hasItems: boolean
+  showSelf: boolean
+  showGift: boolean
+  showDonation: boolean
   onSelf: () => void
   onGift: () => void
   onDonation: () => void
@@ -229,9 +246,9 @@ function Root({
         Bu parayı nerede harcardın?
       </h1>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-        {opt('🙋', 'Kendime', 'Kendi hayalim', onSelf, 'self')}
-        {opt('🎁', 'Hediye', 'Sevdiklerime', onGift, 'gift')}
-        {opt('❤️', 'Bağış', 'İyilik için', onDonation, 'donation')}
+        {showSelf ? opt('🙋', 'Kendime', 'Kendi hayalim', onSelf, 'self') : null}
+        {showGift ? opt('🎁', 'Hediye', 'Sevdiklerime', onGift, 'gift') : null}
+        {showDonation ? opt('❤️', 'Bağış', 'İyilik için', onDonation, 'donation') : null}
       </div>
       {hasItems ? (
         <button
