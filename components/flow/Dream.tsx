@@ -7,11 +7,11 @@
  */
 import { useMemo, useState } from 'react'
 import { formatTL } from '@/lib/share-card'
-import type { DreamItem, FlowCategory, FlowProduct, PurchaseSelection } from '@/lib/flow'
+import { applicableQuips, type DreamItem, type FlowCategory, type FlowProduct, type PurchaseSelection, type Quip } from '@/lib/flow'
 import { Preview } from '@/components/flow/Preview'
 
 type Mode = 'self' | 'gift' | 'donation'
-type Step = 'root' | 'recipient' | 'category' | 'product' | 'text' | 'end'
+type Step = 'root' | 'recipient' | 'category' | 'product' | 'quip' | 'end'
 
 // "Kime?" — sabit alıcı listesi (görselde chip olarak görünür).
 const RECIPIENTS = [
@@ -29,10 +29,12 @@ const RECIPIENTS = [
 export function Dream({
   selection,
   categories,
+  quips,
   onBack,
 }: {
   selection: PurchaseSelection
   categories: FlowCategory[]
+  quips: Quip[]
   onBack: () => void
 }) {
   // Bütçe = ekstra vergi (docs/01 §4.7: standart KDV hariç, üstüne binen kısım).
@@ -52,32 +54,34 @@ export function Dream({
     [categories]
   )
 
-  // Kalan bütçeyle o kategoride alınabilecek en az bir ürün var mı? (docs/01 §3.1.4 filtre)
+  // Kalan bütçeyle o kategoride alınabilecek en az bir ürün var mı? (comparison_price, docs/08)
+  const affordable = (p: FlowProduct) => p.comparisonPrice > 0 && p.comparisonPrice <= remaining
   const affordableCategories = useMemo(
-    () => dreamCategories.filter((c) => c.products.some((p) => p.taxFreePrice > 0 && p.taxFreePrice <= remaining)),
-    [dreamCategories, remaining]
+    () => dreamCategories.filter((c) => c.products.some(affordable)),
+    [dreamCategories, remaining] // eslint-disable-line react-hooks/exhaustive-deps
   )
   const canSelfOrGift = affordableCategories.length > 0
-  const canDonate = !!bagis?.products.some((p) => p.taxFreePrice > 0 && p.taxFreePrice <= remaining)
+  const canDonate = !!bagis?.products.some(affordable)
 
-  // Kataloğun en ucuz vergisiz fiyatı — bitiş eşiği (docs/01 §3.1.4f).
+  // Kataloğun en ucuz adil fiyatı — bitiş eşiği (docs/01 §3.1.4f).
   const cheapest = useMemo(() => {
     const prices = categories
       .filter((c) => c.isSpendable)
-      .flatMap((c) => c.products.map((p) => p.taxFreePrice))
+      .flatMap((c) => c.products.map((p) => p.comparisonPrice))
       .filter((v) => v > 0)
     return prices.length ? Math.min(...prices) : Infinity
   }, [categories])
 
-  function addItem(product: FlowProduct, text: string) {
+  function addItem(product: FlowProduct, quipText: string) {
     const item: DreamItem = {
       emoji: product.emoji || category?.emoji || '🎁',
-      text: text.trim() || product.defaultLineText || product.name,
-      amount: product.taxFreePrice,
+      // Görsel satırı: söz (varsa) yoksa default metin / ürün adı (docs/08: serbest metin kalktı).
+      text: quipText || product.defaultLineText || product.name,
+      amount: product.comparisonPrice,
       tag: mode === 'gift' && recipient ? { emoji: recipient.emoji, name: recipient.name } : undefined,
       positive: mode === 'donation',
     }
-    const next = remaining - product.taxFreePrice
+    const next = remaining - product.comparisonPrice
     setItems((prev) => [...prev, item])
     setRemaining(next)
     // sıfırla
@@ -150,14 +154,16 @@ export function Dream({
           onBack={() => setStep(mode === 'donation' ? 'root' : 'category')}
           onPick={(p) => {
             setPending(p)
-            setStep('text')
+            setStep('quip')
           }}
         />
       ) : null}
 
-      {step === 'text' && pending ? (
-        <TextEntry
+      {step === 'quip' && pending && category ? (
+        <QuipSelector
           product={pending}
+          categorySlug={category.slug}
+          quips={applicableQuips(quips, { name: pending.name, categorySlug: category.slug }, selection.categorySlug)}
           onBack={() => setStep('product')}
           onConfirm={(text) => addItem(pending, text)}
         />
@@ -314,8 +320,8 @@ function ProductList({
   onPick: (p: FlowProduct) => void
   onBack: () => void
 }) {
-  // Sadece kalan bütçeyle alınabilecek ürünler (vergisiz fiyat ≤ kalan).
-  const affordable = category.products.filter((p) => p.taxFreePrice <= remaining && p.taxFreePrice > 0)
+  // Sadece kalan bütçeyle alınabilecek ürünler (adil fiyat ≤ kalan, docs/08).
+  const affordable = category.products.filter((p) => p.comparisonPrice <= remaining && p.comparisonPrice > 0)
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
       <BackLink onClick={onBack} />
@@ -335,7 +341,7 @@ function ProductList({
           >
             <span style={{ fontSize: 28 }}>{p.emoji || category.emoji}</span>
             <span style={{ flexGrow: 1, fontFamily: 'var(--font-ui)', fontSize: 15, fontWeight: 600, color: 'var(--text-body)' }}>{p.name}</span>
-            <span style={{ fontFamily: 'var(--font-ui)', fontVariantNumeric: 'tabular-nums', fontSize: 15, fontWeight: 700, color: 'var(--green-500)' }}>{formatTL(p.taxFreePrice)}</span>
+            <span style={{ fontFamily: 'var(--font-ui)', fontVariantNumeric: 'tabular-nums', fontSize: 15, fontWeight: 700, color: 'var(--green-500)' }}>{formatTL(p.comparisonPrice)}</span>
           </button>
         ))
       )}
@@ -343,17 +349,31 @@ function ProductList({
   )
 }
 
-function TextEntry({
+/**
+ * Söz seçici (docs/08): serbest metin YOK, klavye açılmaz. 3 hazır söz çipi + 🎲 karıştır +
+ * sözsüz devam. Havuz önceliği ürün > kategori > evrensel (applicableQuips zaten sıralı).
+ */
+function QuipSelector({
   product,
+  quips,
   onConfirm,
   onBack,
 }: {
   product: FlowProduct
+  categorySlug: string
+  quips: Quip[]
   onConfirm: (text: string) => void
   onBack: () => void
 }) {
-  const placeholder = product.defaultLineText || product.name
-  const [text, setText] = useState('')
+  const [shuffleSeed, setShuffleSeed] = useState(0)
+
+  // 3 söz göster: öncelikli havuzdan bir pencere, 🎲 ile kaydır. Öncelik korunur (ilk gelenler).
+  const shown = useMemo(() => {
+    if (quips.length <= 3) return quips
+    const start = (shuffleSeed * 3) % quips.length
+    return Array.from({ length: 3 }, (_, i) => quips[(start + i) % quips.length])
+  }, [quips, shuffleSeed])
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
       <BackLink onClick={onBack} />
@@ -361,25 +381,57 @@ function TextEntry({
         <span style={{ fontSize: 32 }}>{product.emoji || '🎁'}</span>
         <div style={{ display: 'flex', flexDirection: 'column' }}>
           <span style={{ fontFamily: 'var(--font-ui)', fontWeight: 700, fontSize: 16 }}>{product.name}</span>
-          <span style={{ fontFamily: 'var(--font-ui)', fontVariantNumeric: 'tabular-nums', fontSize: 14, color: 'var(--green-500)', fontWeight: 700 }}>{formatTL(product.taxFreePrice)}</span>
+          <span style={{ fontFamily: 'var(--font-ui)', fontVariantNumeric: 'tabular-nums', fontSize: 14, color: 'var(--green-500)', fontWeight: 700 }}>{formatTL(product.comparisonPrice)}</span>
         </div>
       </div>
-      <label style={{ fontFamily: 'var(--font-ui)', fontSize: 14, color: 'var(--text-muted)' }}>
-        Görselde ne yazsın? (istersen kendi cümlen)
-      </label>
-      <input
-        value={text}
-        maxLength={40}
-        onChange={(e) => setText(e.target.value)}
-        placeholder={placeholder}
-        style={{ fontFamily: 'var(--font-ui)', fontSize: 16, padding: '14px 16px', borderRadius: 'var(--r-lg)', border: '1px solid var(--cream-300)', background: 'var(--surface-card)', color: 'var(--text-body)', outline: 'none' }}
-      />
-      <button
-        onClick={() => onConfirm(text)}
-        style={{ background: 'var(--coral-500)', color: '#fff', border: 'none', borderRadius: 'var(--r-pill)', padding: '15px', fontFamily: 'var(--font-ui)', fontSize: 16, fontWeight: 700, cursor: 'pointer' }}
-      >
-        Listeme ekle ✨
-      </button>
+
+      {shown.length > 0 ? (
+        <>
+          <span style={{ fontFamily: 'var(--font-ui)', fontSize: 14, color: 'var(--text-muted)' }}>
+            Görselde ne yazsın?
+          </span>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {shown.map((q) => (
+              <button
+                key={q.text}
+                onClick={() => onConfirm(q.text)}
+                style={{
+                  textAlign: 'left',
+                  background: 'var(--surface-card)',
+                  border: '1px solid var(--cream-300)',
+                  borderRadius: 'var(--r-lg)',
+                  padding: '14px 16px',
+                  fontFamily: 'var(--font-ui)',
+                  fontSize: 15,
+                  fontWeight: 500,
+                  color: 'var(--text-body)',
+                  cursor: 'pointer',
+                  lineHeight: 1.35,
+                }}
+              >
+                {q.text}
+              </button>
+            ))}
+          </div>
+        </>
+      ) : null}
+
+      <div style={{ display: 'flex', gap: 10 }}>
+        {quips.length > 3 ? (
+          <button
+            onClick={() => setShuffleSeed((s) => s + 1)}
+            style={{ flexGrow: 1, background: 'var(--surface-card)', border: '1px solid var(--cream-300)', borderRadius: 'var(--r-pill)', padding: '13px', fontFamily: 'var(--font-ui)', fontSize: 15, fontWeight: 600, color: 'var(--text-body)', cursor: 'pointer' }}
+          >
+            🎲 Karıştır
+          </button>
+        ) : null}
+        <button
+          onClick={() => onConfirm('')}
+          style={{ flexGrow: 1, background: 'var(--coral-500)', border: 'none', borderRadius: 'var(--r-pill)', padding: '13px', fontFamily: 'var(--font-ui)', fontSize: 15, fontWeight: 700, color: '#fff', cursor: 'pointer' }}
+        >
+          {shown.length > 0 ? 'Sözsüz devam ✨' : 'Listeme ekle ✨'}
+        </button>
+      </div>
     </div>
   )
 }

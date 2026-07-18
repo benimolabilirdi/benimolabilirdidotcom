@@ -10,11 +10,11 @@ import { Dream } from '@/components/flow/Dream'
 import { CountUp } from '@/components/CountUp'
 import { Wordmark } from '@/components/Wordmark'
 import { formatTL } from '@/lib/share-card'
-import type { FlowCategory, PurchaseSelection } from '@/lib/flow'
+import type { FlowCategory, PurchaseSelection, Quip } from '@/lib/flow'
 
 type Step = 'picker' | 'shock' | 'dream'
 
-export function Flow({ categories }: { categories: FlowCategory[] }) {
+export function Flow({ categories, quips }: { categories: FlowCategory[]; quips: Quip[] }) {
   const [step, setStep] = useState<Step>('picker')
   const [selection, setSelection] = useState<PurchaseSelection | null>(null)
 
@@ -58,7 +58,7 @@ export function Flow({ categories }: { categories: FlowCategory[] }) {
       ) : null}
 
       {step === 'dream' && selection ? (
-        <Dream selection={selection} categories={categories} onBack={() => setStep('shock')} />
+        <Dream selection={selection} categories={categories} quips={quips} onBack={() => setStep('shock')} />
       ) : null}
     </main>
   )

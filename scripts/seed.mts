@@ -157,7 +157,13 @@ console.log(`  ${DRY_RUN ? 'atlandı (dry-run)' : 'upsert edildi'}`)
 // 3) Ürünler — hesapla ve yaz
 // ---------------------------------------------------------------------------
 
-const rows = parseCsv(readFileSync('seed/products.csv', 'utf8'))
+// Ana katalog + harç ek dosyası (harç ürünleri tatil/egitim'e eklenir). Harç-ek SONRA
+// gelir → sort_order (global index) ile kategorilerinin altına düşer (docs/08: tatilde
+// pasaport turların altında).
+const rows = [
+  ...parseCsv(readFileSync('seed/products.csv', 'utf8')),
+  ...parseCsv(readFileSync('seed/products-harclar-ek.csv', 'utf8')),
+]
 const categoryBySlug = new Map(categories.map((c) => [c.slug, c]))
 const tagSlugs = new Set(tags.map((t) => t.slug))
 
@@ -182,15 +188,19 @@ type Computed = {
   taxFreePrice: number
   totalTax: number
   excessTax: number
+  comparisonPrice: number
   breakdown: Record<string, number>
   taxRatio: number
   notes: string[]
   tags: string[]
+  sortOrder: number
 }
 
 const computed: Computed[] = []
 
+let rowIndex = 0
 for (const row of rows) {
+  const sortOrder = rowIndex++
   const category = categoryBySlug.get(row.category_slug)
   if (!category) await die(`'${row.name}': bilinmeyen kategori '${row.category_slug}'`, null)
 
@@ -225,10 +235,12 @@ for (const row of rows) {
       taxFreePrice: result.taxFreePrice,
       totalTax: result.totalTax,
       excessTax: result.excessTax,
+      comparisonPrice: result.comparisonPrice,
       breakdown: result.breakdown,
       taxRatio: result.taxRatio,
       notes: result.notes,
       tags: rowTags,
+      sortOrder,
     })
   } catch (error) {
     await die(`'${row.name}' hesaplanamadı (raf: ${retailPrice}):`, error)
@@ -266,11 +278,13 @@ const productRows = computed.map((item) => ({
   emoji: item.row.emoji || null,
   retail_price: Number(item.row.retail_price),
   tax_free_price: item.taxFreePrice,
+  comparison_price: item.comparisonPrice,
   tax_breakdown: item.breakdown,
   default_line_text: item.row.default_line_text || null,
   variant: item.variant,
   tax_formula: item.variant ? item.formula : null,
   quantity: item.row.quantity ? Number(item.row.quantity) : null,
+  sort_order: item.sortOrder,
   price_updated_at: new Date().toISOString(),
 }))
 
@@ -328,6 +342,59 @@ if (links.length) {
   if (linkError) await die('Etiket bağları kurulamadı:', linkError)
 }
 console.log(`  ${links.length} etiket bağı kuruldu`)
+
+// ---------------------------------------------------------------------------
+// 5) Hazır sözler (quips) — serbest metin yerine (docs/08 final)
+// ---------------------------------------------------------------------------
+
+const quipRows = parseCsv(readFileSync('seed/quips-final.csv', 'utf8'))
+console.log(`\n▸ Sözler (${quipRows.length})`)
+
+const quipInserts: Array<{
+  scope: string
+  category_id: string | null
+  product_match: string | null
+  text: string
+  hide_if_same_category: boolean
+  sort_order: number
+}> = []
+
+quipRows.forEach((q, i) => {
+  let scope = q.scope
+  let categorySlug = q.category_slug || ''
+  let productMatch = q.product_match || null
+
+  // 'harclar' kategori değil: kategori-scope harclar sözlerini Pasaport ürün-sözüne çevir (docs/08).
+  if (scope === 'kategori' && categorySlug === 'harclar') {
+    scope = 'urun'
+    productMatch = 'Pasaport'
+    categorySlug = ''
+  }
+
+  let categoryId: string | null = null
+  if (scope === 'kategori') {
+    categoryId = categoryIdBySlug.get(categorySlug) ?? null
+    if (!categoryId) {
+      // harclar dışında bilinmeyen kategori → hata.
+      throw new Error(`Söz #${i}: bilinmeyen kategori '${categorySlug}'`)
+    }
+  }
+
+  quipInserts.push({
+    scope,
+    category_id: categoryId,
+    product_match: scope === 'urun' ? productMatch : null,
+    text: q.text,
+    hide_if_same_category: q.hide_if_same_category === '1',
+    sort_order: i,
+  })
+})
+
+const { error: quipWipe } = await supabase.from('quips').delete().not('id', 'is', null)
+if (quipWipe) await die('Eski söz temizliği başarısız:', quipWipe)
+const { error: quipErr } = await supabase.from('quips').insert(quipInserts)
+if (quipErr) await die('Söz ekleme başarısız:', quipErr)
+console.log(`  ${quipInserts.length} söz eklendi`)
 
 // ---------------------------------------------------------------------------
 // 5) Uyarı özeti

@@ -7,19 +7,53 @@ import { taxComponentLabels } from '@/lib/share-card'
 
 export type FlowTag = { slug: string; name: string; emoji: string | null; kind: string }
 
-/** Server'dan client'a geçen ürün. taxFreePrice hayal döngüsü için (docs/01 §3.1.4c). */
+/** Server'dan client'a geçen ürün. Hayal döngüsü comparisonPrice ile filtreler/harcar (docs/08). */
 export type FlowProduct = {
   id: string
   name: string
   emoji: string | null
   retailPrice: number
   taxFreePrice: number
+  /** Adil fiyat (matrah × standart KDV). Hayal bütçe filtresi ve satır tutarı bu (docs/08). */
+  comparisonPrice: number
   defaultLineText: string | null
   tags: FlowTag[]
   /** variant override formülü (docs/08). Yoksa kategori default'u kullanılır. */
   taxFormula: TaxFormula | null
   /** fixed_per_unit (akaryakıt) hesabı için litre. */
   quantity: number | null
+}
+
+/** Hazır söz (docs/08). Serbest metin yerine kullanıcı bunlardan seçer. */
+export type Quip = {
+  scope: 'universal' | 'kategori' | 'urun'
+  categorySlug: string | null
+  productMatch: string | null
+  text: string
+  hideIfSameCategory: boolean
+}
+
+/**
+ * Bir hayal ürünü için geçerli sözleri öncelik sırasıyla döndürür: ürün > kategori > evrensel.
+ * hide_if_same_category: alınan ürünün kategorisi = hayal ürününün kategorisi ise o sözler elenir.
+ */
+export function applicableQuips(
+  quips: Quip[],
+  dreamProduct: { name: string; categorySlug: string },
+  purchasedCategorySlug: string
+): Quip[] {
+  const sameCategory = purchasedCategorySlug === dreamProduct.categorySlug
+  const nameLc = dreamProduct.name.toLocaleLowerCase('tr')
+
+  const matches = (q: Quip): boolean => {
+    if (q.hideIfSameCategory && sameCategory) return false
+    if (q.scope === 'universal') return true
+    if (q.scope === 'kategori') return q.categorySlug === dreamProduct.categorySlug
+    return !!q.productMatch && nameLc.includes(q.productMatch.toLocaleLowerCase('tr'))
+  }
+
+  const rank = (q: Quip) => (q.scope === 'urun' ? 0 : q.scope === 'kategori' ? 1 : 2)
+  return quips.filter(matches).sort((a, b) => rank(a) - rank(b))
 }
 
 export type FlowCategory = {

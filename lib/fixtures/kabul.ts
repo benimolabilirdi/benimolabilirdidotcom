@@ -53,3 +53,28 @@ export const KABUL_PERSONASIZ: ShareCardData = BASE
 
 // Geriye dönük ad (eski importlar için).
 export const KABUL_SENARYOSU = KABUL_PERSONASIZ
+
+/** Taşma senaryosu: otomobil (dev ekstra vergi) + 12 hayal kalemi → emoji özeti testi. */
+export const KABUL_OTOMOBIL_TASMA: ShareCardData = {
+  product: { name: 'Toyota Corolla', emoji: '🚗' },
+  retailPrice: 2284000,
+  totalTax: 1235000,
+  excessTax: 1025000,
+  taxComponents: ['ÖTV', 'KDV', 'TRT payı'],
+  personaLine: 'Oysa ben maaşımdan %27’ye varan gelir vergisini zaten ödüyorum.',
+  remaining: 34000,
+  items: [
+    { emoji: '📱', text: 'Bir de telefon alırdım', amount: 70000, tag: { emoji: '🙋', name: 'Kendime' } },
+    { emoji: '🦷', text: 'Ertelediğim diş tedavisi', amount: 20000 },
+    { emoji: '🎈', text: 'Balonlar bensiz uçuyor 🎈', amount: 12000, tag: { emoji: '💑', name: 'Eşime' } },
+    { emoji: '🎓', text: 'Kızıma dershane', amount: 70000, tag: { emoji: '🧒', name: 'Çocuğuma' } },
+    { emoji: '🧊', text: 'Yeni evimize buzdolabı', amount: 26700 },
+    { emoji: '🎮', text: 'Save dosyam hazır · konsol bekliyor', amount: 36000 },
+    { emoji: '📚', text: 'Bir raf dolusu klasik', amount: 6000 },
+    { emoji: '🎭', text: 'Perde açıldı · ben dışarıdaydım 🎭', amount: 5000 },
+    { emoji: '🧸', text: 'Yeğenime LEGO seti', amount: 1300, tag: { emoji: '👶', name: 'Yeğenime' } },
+    { emoji: '🛂', text: 'Dünyayı görme biletim', amount: 14834 },
+    { emoji: '⌚', text: 'Eşime akıllı saat', amount: 22000, tag: { emoji: '💑', name: 'Eşime' } },
+    { emoji: '❤️', text: 'Bir öğrenciye burs desteği', amount: 10000, positive: true },
+  ],
+}
