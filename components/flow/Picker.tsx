@@ -88,7 +88,14 @@ function CategoryView({
   }, [category.products, query])
 
   function pickProduct(p: FlowCategory['products'][number]) {
-    const sel = computeSelection(category, p.retailPrice, p.name, p.emoji || category.emoji)
+    const sel = computeSelection(
+      category,
+      p.retailPrice,
+      p.name,
+      p.emoji || category.emoji,
+      p.quantity ?? undefined,
+      p.taxFormula
+    )
     if (sel) onSelect(sel)
   }
 

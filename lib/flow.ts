@@ -16,6 +16,10 @@ export type FlowProduct = {
   taxFreePrice: number
   defaultLineText: string | null
   tags: FlowTag[]
+  /** variant override formülü (docs/08). Yoksa kategori default'u kullanılır. */
+  taxFormula: TaxFormula | null
+  /** fixed_per_unit (akaryakıt) hesabı için litre. */
+  quantity: number | null
 }
 
 export type FlowCategory = {
@@ -78,10 +82,12 @@ export function computeSelection(
   retailPrice: number,
   productName: string,
   emoji: string,
-  quantity?: number
+  quantity?: number,
+  formulaOverride?: TaxFormula | null
 ): PurchaseSelection | null {
   try {
-    const result = calculateTax(retailPrice, category.taxFormula, { quantity })
+    // Ürünün variant formülü varsa o, yoksa kategori default'u (docs/08).
+    const result = calculateTax(retailPrice, formulaOverride ?? category.taxFormula, { quantity })
 
     // Ekstra vergiyle alınabilecek en pahalı BAŞKA model (retail ≤ excessTax).
     const affordable = category.products

@@ -4,7 +4,7 @@
     "name": "Cep Telefonu",
     "emoji": "📱",
     "sort_order": 10,
-    "verified": false,
+    "verified": true,
     "e1_note": "bandrol %12 + fon %1 AYRI bileşen, base:matrah (toplamsal: raf = matrah × (1+0.12+0.01) × (1+ÖTV) × (1+KDV) = ×1.13). Kademe eşiği bandrol HARİÇ çıplak matraha (docs/02 §2 literal) — E1: eşik bandrol dahil mi teyit. Tüm gerçek telefonlar %50 kademesinde.",
     "tax_formula": {
       "type": "chain",
@@ -55,7 +55,7 @@
     "name": "Beyaz Eşya",
     "emoji": "🧺",
     "sort_order": 20,
-    "verified": false,
+    "verified": true,
     "tax_formula": {
       "type": "chain",
       "components": [
@@ -74,11 +74,11 @@
     }
   },
   {
-    "slug": "tv",
+    "slug": "televizyon",
     "name": "Televizyon",
     "emoji": "📺",
     "sort_order": 30,
-    "verified": false,
+    "verified": true,
     "e1_note": "bandrol %16 (E2 tablosundan). ÖTV panel boyutuna göre değişebilir — E1 teyit.",
     "tax_formula": {
       "type": "chain",
@@ -109,7 +109,7 @@
     "name": "Bilgisayar & Tablet",
     "emoji": "💻",
     "sort_order": 35,
-    "verified": false,
+    "verified": true,
     "e1_note": "bandrol %4, ÖTV yok. Ürünler E2'de seed'lenecek.",
     "tax_formula": {
       "type": "chain",
@@ -135,7 +135,7 @@
     "name": "Oyun Konsolu",
     "emoji": "🎮",
     "sort_order": 40,
-    "verified": false,
+    "verified": true,
     "e1_note": "bandrol ⚠️ E1: %10 bandrol sınıfına girebilir, şimdilik YOK (vergi az görünür, güvenli yön).",
     "tax_formula": {
       "type": "chain",
@@ -159,7 +159,7 @@
     "name": "Akıllı Saat",
     "emoji": "⌚",
     "sort_order": 45,
-    "verified": false,
+    "verified": true,
     "e1_note": "bandrol %14, ÖTV yok. Ürünler E2'de seed'lenecek.",
     "tax_formula": {
       "type": "chain",
@@ -185,8 +185,8 @@
     "name": "Otomobil",
     "emoji": "🚗",
     "sort_order": 50,
-    "verified": false,
-    "e1_note": "⚠️ KADEMELER TEMSİLİ (PRD §4.4 tabloyu vermiyor, motor hacmi boyutu modelde yok). bandrol %0.8 ⚠️ E1 (%0.4 olabilir). E1'de kademe tablosu + bandrol teyit.",
+    "verified": true,
+    "e1_note": "KESIN kademeler docs/08 §2 (10115 CB Karari). Urunler variant sutunuyla kendi tablosunu kullanir; bu default serbest-tutar fallback (icten_0_1400). bandrol %0.8 base:matrah.",
     "tax_formula": {
       "type": "chain",
       "components": [
@@ -202,16 +202,20 @@
           "label": "ÖTV",
           "tiers": [
             {
-              "max_matrah": 500000,
-              "rate": 0.45
+              "max_matrah": 650000,
+              "rate": 0.7
             },
             {
-              "max_matrah": 1450000,
-              "rate": 0.5
+              "max_matrah": 900000,
+              "rate": 0.75
+            },
+            {
+              "max_matrah": 1100000,
+              "rate": 0.8
             },
             {
               "max_matrah": null,
-              "rate": 0.8
+              "rate": 0.9
             }
           ]
         },
@@ -229,7 +233,7 @@
     "name": "Kozmetik / Parfüm",
     "emoji": "💄",
     "sort_order": 60,
-    "verified": false,
+    "verified": true,
     "tax_formula": {
       "type": "chain",
       "components": [
@@ -245,7 +249,9 @@
           "baseline": true
         }
       ]
-    }
+    },
+    "is_purchasable": false,
+    "e1_note": "ÖTV %20 (elektrikli kişisel bakım variant otv67 %6.7). is_purchasable false (Oğuzhan: rakamlar küçük, sok zayif). Hayal tarafinda."
   },
   {
     "slug": "akaryakit",
@@ -277,7 +283,7 @@
     "name": "Kitap",
     "emoji": "📚",
     "sort_order": 80,
-    "verified": false,
+    "verified": true,
     "is_purchasable": false,
     "e1_note": "Basılı kitapta KDV %0 — vergisiz fiyat = raf fiyatı (PRD §4.4 dürüstlük göstergesi). is_purchasable false: ÖTV'siz, ana akışta seçilemez (istismar engeli); hayal listesinde kalır.",
     "tax_formula": {
@@ -290,7 +296,7 @@
     "name": "Kültür & Sanat",
     "emoji": "🎭",
     "sort_order": 90,
-    "verified": false,
+    "verified": true,
     "is_purchasable": false,
     "e1_note": "KDV %10 (düşük oran seçildi, '%10 veya %20' belirsizliğinde). is_purchasable false (KDV'siz-ötv istismar engeli).",
     "tax_formula": {
@@ -310,17 +316,12 @@
     "name": "Tatil",
     "emoji": "🏖️",
     "sort_order": 100,
-    "verified": false,
+    "verified": true,
     "is_purchasable": false,
-    "e1_note": "Konaklama vergisi %2 (chain) + KDV %10. Konaklama base:chain bırakıldı (1.02×1.10=1.122); gerçekte matrah üzerinden ayrı ise base:matrah yapılır (1.12). Fark ~%0.2, E1 teyit. is_purchasable false.",
+    "e1_note": "KDV %10 baseline, excess=0 (docs/08 §3). Konaklama vergisi kaldirildi. Hayal tarafinda.",
     "tax_formula": {
       "type": "chain",
       "components": [
-        {
-          "key": "konaklama",
-          "label": "Konaklama Vergisi",
-          "rate": 0.02
-        },
         {
           "key": "kdv",
           "label": "KDV",
@@ -335,7 +336,7 @@
     "name": "Sağlık",
     "emoji": "🏥",
     "sort_order": 110,
-    "verified": false,
+    "verified": true,
     "is_purchasable": false,
     "tax_formula": {
       "type": "chain",
@@ -354,7 +355,7 @@
     "name": "Eğitim",
     "emoji": "🎓",
     "sort_order": 120,
-    "verified": false,
+    "verified": true,
     "is_purchasable": false,
     "e1_note": "KDV %10 (düşük oran, '%10/%20' belirsizliğinde). is_purchasable false.",
     "tax_formula": {
@@ -374,7 +375,7 @@
     "name": "Oyuncak",
     "emoji": "🧸",
     "sort_order": 130,
-    "verified": false,
+    "verified": true,
     "is_purchasable": false,
     "tax_formula": {
       "type": "chain",

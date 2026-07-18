@@ -22,7 +22,7 @@ async function getCategories(): Promise<FlowCategory[]> {
     supabase
       .from('products')
       .select(
-        'id, name, emoji, retail_price, tax_free_price, default_line_text, sort_order, categories!inner(slug), product_tags(tags(slug, name, emoji, kind))'
+        'id, name, emoji, retail_price, tax_free_price, default_line_text, sort_order, tax_formula, quantity, categories!inner(slug), product_tags(tags(slug, name, emoji, kind))'
       )
       .eq('is_active', true)
       .order('sort_order'),
@@ -45,6 +45,8 @@ async function getCategories(): Promise<FlowCategory[]> {
       taxFreePrice: Number(p.tax_free_price),
       defaultLineText: p.default_line_text,
       tags,
+      taxFormula: (p.tax_formula as FlowProduct['taxFormula']) ?? null,
+      quantity: p.quantity != null ? Number(p.quantity) : null,
     })
   }
 

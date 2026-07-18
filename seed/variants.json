@@ -1,0 +1,69 @@
+{
+  "_doc": "docs/08 §2-3 variant formül override'ları. Ürünün variant sütunu buraya eşlenir; yoksa kategori default'u kullanılır. bandrol/fon base:matrah, KDV baseline. Kademe eşikleri MATRAH tabanlı (docs/08 §5 örnekleriyle teyitli).",
+
+  "icten_0_1400": { "type": "chain", "components": [
+    { "key": "bandrol", "label": "TRT Bandrolü", "short_label": "TRT payı", "base": "matrah", "rate": 0.008 },
+    { "key": "otv", "label": "ÖTV", "tiers": [
+      { "max_matrah": 650000, "rate": 0.70 },
+      { "max_matrah": 900000, "rate": 0.75 },
+      { "max_matrah": 1100000, "rate": 0.80 },
+      { "max_matrah": null, "rate": 0.90 } ]},
+    { "key": "kdv", "label": "KDV", "rate": 0.20, "baseline": true } ]},
+
+  "icten_1400_1600": { "type": "chain", "components": [
+    { "key": "bandrol", "label": "TRT Bandrolü", "short_label": "TRT payı", "base": "matrah", "rate": 0.008 },
+    { "key": "otv", "label": "ÖTV", "tiers": [
+      { "max_matrah": 850000, "rate": 0.75 },
+      { "max_matrah": 1100000, "rate": 0.80 },
+      { "max_matrah": 1650000, "rate": 0.90 },
+      { "max_matrah": null, "rate": 1.00 } ]},
+    { "key": "kdv", "label": "KDV", "rate": 0.20, "baseline": true } ]},
+
+  "icten_1600_2000": { "type": "chain", "components": [
+    { "key": "bandrol", "label": "TRT Bandrolü", "short_label": "TRT payı", "base": "matrah", "rate": 0.008 },
+    { "key": "otv", "label": "ÖTV", "tiers": [
+      { "max_matrah": 1650000, "rate": 1.50 },
+      { "max_matrah": null, "rate": 1.70 } ]},
+    { "key": "kdv", "label": "KDV", "rate": 0.20, "baseline": true } ]},
+
+  "icten_2000_plus": { "type": "chain", "components": [
+    { "key": "bandrol", "label": "TRT Bandrolü", "short_label": "TRT payı", "base": "matrah", "rate": 0.008 },
+    { "key": "otv", "label": "ÖTV", "tiers": [ { "max_matrah": null, "rate": 2.20 } ]},
+    { "key": "kdv", "label": "KDV", "rate": 0.20, "baseline": true } ]},
+
+  "hev_50kw_1800": { "type": "chain", "components": [
+    { "key": "bandrol", "label": "TRT Bandrolü", "short_label": "TRT payı", "base": "matrah", "rate": 0.008 },
+    { "key": "otv", "label": "ÖTV", "tiers": [
+      { "max_matrah": 1250000, "rate": 0.70 },
+      { "max_matrah": null, "rate": 0.80 } ]},
+    { "key": "kdv", "label": "KDV", "rate": 0.20, "baseline": true } ]},
+
+  "ev_lte160": { "type": "chain", "components": [
+    { "key": "bandrol", "label": "TRT Bandrolü", "short_label": "TRT payı", "base": "matrah", "rate": 0.008 },
+    { "key": "otv", "label": "ÖTV", "tiers": [
+      { "max_matrah": 1650000, "rate": 0.25 },
+      { "max_matrah": null, "rate": 0.55 } ]},
+    { "key": "kdv", "label": "KDV", "rate": 0.20, "baseline": true } ]},
+
+  "ev_gt160": { "type": "chain", "components": [
+    { "key": "bandrol", "label": "TRT Bandrolü", "short_label": "TRT payı", "base": "matrah", "rate": 0.008 },
+    { "key": "otv", "label": "ÖTV", "tiers": [
+      { "max_matrah": 1650000, "rate": 0.65 },
+      { "max_matrah": null, "rate": 0.75 } ]},
+    { "key": "kdv", "label": "KDV", "rate": 0.20, "baseline": true } ]},
+
+  "otv67": { "type": "chain", "components": [
+    { "key": "otv", "label": "ÖTV", "rate": 0.067 },
+    { "key": "kdv", "label": "KDV", "rate": 0.20, "baseline": true } ]},
+
+  "kdv_only": { "type": "chain", "components": [
+    { "key": "kdv", "label": "KDV", "rate": 0.20, "baseline": true } ]},
+
+  "benzin_lt": { "type": "fixed_per_unit", "unit": "litre", "components": [
+    { "key": "otv", "label": "ÖTV", "amount_per_unit": 17.48 },
+    { "key": "kdv", "label": "KDV", "rate": 0.20, "baseline": true } ]},
+
+  "motorin_lt": { "type": "fixed_per_unit", "unit": "litre", "components": [
+    { "key": "otv", "label": "ÖTV", "amount_per_unit": 16.74 },
+    { "key": "kdv", "label": "KDV", "rate": 0.20, "baseline": true } ]}
+}

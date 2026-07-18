@@ -1,10 +1,10 @@
 [
-  { "slug": "anneler-gunu", "name": "Anneler Günü Hediyesi", "emoji": "🌷", "kind": "occasion", "sort_order": 10 },
-  { "slug": "babalar-gunu", "name": "Babalar Günü Hediyesi", "emoji": "👔", "kind": "occasion", "sort_order": 20 },
-  { "slug": "dogum-gunu", "name": "Doğum Günü Hediyesi", "emoji": "🎂", "kind": "occasion", "sort_order": 30 },
-  { "slug": "yilbasi", "name": "Yılbaşı Hediyesi", "emoji": "🎄", "kind": "occasion", "sort_order": 40 },
-  { "slug": "sevgililer-gunu", "name": "Sevgililer Günü Hediyesi", "emoji": "💝", "kind": "occasion", "sort_order": 50 },
-  { "slug": "bayram", "name": "Bayram Hediyesi", "emoji": "🌙", "kind": "occasion", "sort_order": 60 },
+  { "slug": "anneler-gunu", "name": "Anneler Günü", "emoji": "🌷", "kind": "occasion", "sort_order": 10 },
+  { "slug": "babalar-gunu", "name": "Babalar Günü", "emoji": "👔", "kind": "occasion", "sort_order": 20 },
+  { "slug": "dogum-gunu", "name": "Doğum Günü", "emoji": "🎂", "kind": "occasion", "sort_order": 30 },
+  { "slug": "yilbasi", "name": "Yılbaşı", "emoji": "🎄", "kind": "occasion", "sort_order": 40 },
+  { "slug": "sevgililer-gunu", "name": "Sevgililer Günü", "emoji": "❤️", "kind": "occasion", "sort_order": 50 },
+  { "slug": "bayram", "name": "Bayram", "emoji": "🌙", "kind": "occasion", "sort_order": 60 },
 
   { "slug": "anne", "name": "Anneme", "emoji": "👩", "kind": "recipient", "sort_order": 110 },
   { "slug": "baba", "name": "Babama", "emoji": "👨", "kind": "recipient", "sort_order": 120 },
@@ -14,6 +14,6 @@
   { "slug": "aile", "name": "Aileme", "emoji": "👨‍👩‍👧", "kind": "recipient", "sort_order": 160 },
   { "slug": "kendim", "name": "Kendime", "emoji": "🙋", "kind": "recipient", "sort_order": 170 },
 
-  { "slug": "kis-tatili", "name": "Kış Tatili", "emoji": "❄️", "kind": "context", "sort_order": 210 },
-  { "slug": "okul-donemi", "name": "Okul Dönemi", "emoji": "🎒", "kind": "context", "sort_order": 220 }
+  { "slug": "ev", "name": "Ev", "emoji": "🏠", "kind": "context", "sort_order": 210 },
+  { "slug": "okul", "name": "Okul", "emoji": "🎒", "kind": "context", "sort_order": 220 }
 ]

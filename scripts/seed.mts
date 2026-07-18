@@ -130,6 +130,12 @@ const categoryRows = categories.map((c) => ({
 if (!DRY_RUN) {
   const { error } = await supabase.from('categories').upsert(categoryRows, { onConflict: 'slug' })
   if (error) await die('Kategori upsert başarısız:', error)
+
+  // Seed'de olmayan eski kategorileri sil (ör. yeniden adlandırılan 'tv'). FK cascade
+  // ürünlerini de siler — temiz katalog.
+  const slugs = categories.map((c) => c.slug)
+  const { error: delErr } = await supabase.from('categories').delete().not('slug', 'in', `(${slugs.join(',')})`)
+  if (delErr) await die('Eski kategori temizliği başarısız:', delErr)
 }
 console.log(`  ${DRY_RUN ? 'atlandı (dry-run)' : 'upsert edildi'}`)
 
@@ -155,13 +161,27 @@ const rows = parseCsv(readFileSync('seed/products.csv', 'utf8'))
 const categoryBySlug = new Map(categories.map((c) => [c.slug, c]))
 const tagSlugs = new Set(tags.map((t) => t.slug))
 
+// Variant → formül override (docs/08 §2-3). Ürünün variant sütunu buraya eşlenir.
+const variants: Record<string, TaxFormula> = JSON.parse(readFileSync('seed/variants.json', 'utf8'))
+for (const [key, formula] of Object.entries(variants)) {
+  if (key.startsWith('_')) continue
+  try {
+    assertValidFormula(formula)
+  } catch (error) {
+    await die(`Variant '${key}' formülü geçersiz:`, error)
+  }
+}
+
 console.log(`\n▸ Ürünler (${rows.length})\n`)
 
 type Computed = {
   row: Record<string, string>
   category: SeedCategory
+  formula: TaxFormula // çözülmüş (variant override ya da kategori default)
+  variant: string | null
   taxFreePrice: number
   totalTax: number
+  excessTax: number
   breakdown: Record<string, number>
   taxRatio: number
   notes: string[]
@@ -177,26 +197,34 @@ for (const row of rows) {
   const retailPrice = Number(row.retail_price)
   const quantity = row.quantity ? Number(row.quantity) : undefined
 
+  // Formül: variant varsa override, yoksa kategori default.
+  const variant = row.variant || null
+  if (variant && !variants[variant]) {
+    await die(`'${row.name}': bilinmeyen variant '${variant}' (seed/variants.json)`, null)
+  }
+  const formula = variant ? variants[variant] : category!.tax_formula
+
   // fixed_per_unit (akaryakıt) miktar olmadan çözülemez — sessizce geçmesin.
-  if (category.tax_formula.type === 'fixed_per_unit' && quantity === undefined) {
-    await die(
-      `'${row.name}': '${category.slug}' maktu formül kullanıyor, CSV'de quantity sütunu zorunlu.`,
-      null
-    )
+  if (formula.type === 'fixed_per_unit' && quantity === undefined) {
+    await die(`'${row.name}': maktu formül kullanıyor, CSV'de quantity sütunu zorunlu.`, null)
   }
 
-  const rowTags = row.tags ? row.tags.split(',').map((t) => t.trim()).filter(Boolean) : []
+  // Etiketler noktalı virgül ayraçlı (docs/08 CSV formatı).
+  const rowTags = row.tags ? row.tags.split(';').map((t) => t.trim()).filter(Boolean) : []
   for (const tag of rowTags) {
     if (!tagSlugs.has(tag)) await die(`'${row.name}': bilinmeyen etiket '${tag}'`, null)
   }
 
   try {
-    const result = calculateTax(retailPrice, category.tax_formula, { quantity })
+    const result = calculateTax(retailPrice, formula, { quantity })
     computed.push({
       row,
-      category,
+      category: category!,
+      formula,
+      variant,
       taxFreePrice: result.taxFreePrice,
       totalTax: result.totalTax,
+      excessTax: result.excessTax,
       breakdown: result.breakdown,
       taxRatio: result.taxRatio,
       notes: result.notes,
@@ -211,16 +239,16 @@ for (const row of rows) {
 const pad = (s: string, n: number) => s.padEnd(n)
 const padStart = (s: string, n: number) => s.padStart(n)
 console.log(
-  `  ${pad('ÜRÜN', 32)}${padStart('RAF', 12)}${padStart('VERGİSİZ', 12)}${padStart('VERGİ', 12)}${padStart('%', 6)}`
+  `  ${pad('ÜRÜN', 30)}${padStart('RAF', 12)}${padStart('VERGİSİZ', 12)}${padStart('EKSTRA', 12)}${padStart('%', 6)}`
 )
-console.log(`  ${'─'.repeat(74)}`)
+console.log(`  ${'─'.repeat(72)}`)
 for (const item of computed) {
   console.log(
-    `  ${pad(item.row.name.slice(0, 31), 32)}` +
+    `  ${pad(item.row.name.slice(0, 29), 30)}` +
       `${padStart(tl(Number(item.row.retail_price)), 12)}` +
       `${padStart(tl(item.taxFreePrice), 12)}` +
-      `${padStart(tl(item.totalTax), 12)}` +
-      `${padStart((item.taxRatio * 100).toFixed(0), 6)}`
+      `${padStart(tl(item.excessTax), 12)}` +
+      `${padStart(((item.excessTax / Number(item.row.retail_price)) * 100).toFixed(0), 6)}`
   )
   for (const note of item.notes) console.log(`    ↳ ${note}`)
 }
@@ -230,7 +258,8 @@ if (DRY_RUN) {
   process.exit(0)
 }
 
-// Ürünleri yaz
+// Ürünleri yaz. variant varsa çözülmüş tax_formula ürüne yazılır (flow bunu kullanır);
+// yoksa null → flow kategori formülüne düşer.
 const productRows = computed.map((item) => ({
   category_id: null as string | null, // aşağıda doldurulur
   name: item.row.name,
@@ -239,6 +268,9 @@ const productRows = computed.map((item) => ({
   tax_free_price: item.taxFreePrice,
   tax_breakdown: item.breakdown,
   default_line_text: item.row.default_line_text || null,
+  variant: item.variant,
+  tax_formula: item.variant ? item.formula : null,
+  quantity: item.row.quantity ? Number(item.row.quantity) : null,
   price_updated_at: new Date().toISOString(),
 }))
 
@@ -252,13 +284,17 @@ computed.forEach((item, i) => {
   productRows[i].category_id = categoryIdBySlug.get(item.category.slug)!
 })
 
+// Temiz katalog: CSV artık kesin liste. Eski ürünleri sil (product_tags cascade), yeniden ekle.
+const { error: wipeErr } = await supabase.from('products').delete().not('id', 'is', null)
+if (wipeErr) await die('Eski ürün temizliği başarısız:', wipeErr)
+
 const { data: upserted, error: prodError } = await supabase
   .from('products')
-  .upsert(productRows, { onConflict: 'category_id,name' })
+  .insert(productRows)
   .select('id, name, category_id')
-if (prodError) await die('Ürün upsert başarısız:', prodError)
+if (prodError) await die('Ürün ekleme başarısız:', prodError)
 
-console.log(`\n  ${upserted!.length} ürün upsert edildi`)
+console.log(`\n  ${upserted!.length} ürün eklendi`)
 
 // ---------------------------------------------------------------------------
 // 4) Etiket bağları

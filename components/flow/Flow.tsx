@@ -41,7 +41,7 @@ export function Flow({ categories }: { categories: FlowCategory[] }) {
 
       {step === 'picker' ? (
         <Picker
-          categories={categories}
+          categories={categories.filter((c) => c.isPurchasable)}
           onSelect={(sel) => {
             setSelection(sel)
             setStep('shock')

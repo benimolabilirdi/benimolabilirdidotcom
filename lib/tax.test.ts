@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs'
 import { describe, it, expect } from 'vitest'
 import { calculateTax, assertValidFormula, type TaxFormula } from './tax'
 
@@ -91,6 +92,42 @@ describe('kademesiz zincir', () => {
     expect(result.breakdown.kdv).toBe(1666.67) // (7810.06 + 523.27) × 0.20
     expect(result.totalTax).toBe(2189.94)
     expectInvariants(result)
+  })
+})
+
+describe('E1 kabul testi (docs/08 §5, gerçek seed formülleriyle, ±%1)', () => {
+  // GERÇEK seed formüllerini oku — test, üretim verisinin doküman değerlerini üretmesini doğrular.
+  const variants: Record<string, TaxFormula> = JSON.parse(readFileSync('seed/variants.json', 'utf8'))
+  const categories: Array<{ slug: string; tax_formula: TaxFormula }> = JSON.parse(
+    readFileSync('seed/categories.json', 'utf8')
+  )
+  const catFormula = (slug: string) => categories.find((c) => c.slug === slug)!.tax_formula
+
+  // docs/08 §5 tablosu: [ad, formül, raf, beklenen excess, quantity?]
+  const CASES: Array<[string, TaxFormula, number, number, number?]> = [
+    ['Yeni Clio (icten_0_1400)', variants.icten_0_1400, 1830000, 793000],
+    ['Corolla 1.5 (icten_1400_1600)', variants.icten_1400_1600, 2284000, 1025000],
+    ['Togg V1 (ev_lte160)', variants.ev_lte160, 1909048, 394000],
+    ['iPhone 17 PM 256 (telefon)', catFormula('telefon'), 122000, 50020],
+    ['Samsung 109 TV (televizyon)', catFormula('televizyon'), 34000, 6520],
+    ['40 lt benzin (benzin_lt)', variants.benzin_lt, 2640, 839, 40],
+  ]
+
+  for (const [name, formula, retail, expectedExcess, quantity] of CASES) {
+    it(`${name}: excess ≈ ${expectedExcess}`, () => {
+      const r = calculateTax(retail, formula, { quantity })
+      expect(r.excessTax).toBeGreaterThan(expectedExcess * 0.99)
+      expect(r.excessTax).toBeLessThan(expectedExcess * 1.01)
+      // Değişmez her formülde geçerli.
+      expect(Math.round(r.comparisonPrice * 100) + Math.round(r.excessTax * 100)).toBe(Math.round(retail * 100))
+    })
+  }
+
+  it('EV3 matrahı 1,65M eşiğinin hemen altında — kademe boşluğu vakası çözülür', () => {
+    // docs/08 §5 notu: Kia EV3 2.485.000, matrah ~1,643M, ev_lte160 %25 kademesinde.
+    const r = calculateTax(2485000, variants.ev_lte160)
+    expect(r.taxFreePrice).toBeLessThan(1650000) // %25 kademesinde kaldı
+    expect(r.notes).toEqual([]) // tutarlı çözüm, boşluk sabitlemesi yok
   })
 })
 
