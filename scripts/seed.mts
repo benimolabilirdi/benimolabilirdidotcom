@@ -62,7 +62,9 @@ function parseCsv(text: string): Record<string, string>[] {
       if (char === '"') {
         if (text[i + 1] === '"') { field += '"'; i++ } else inQuotes = false
       } else field += char
-    } else if (char === '"') inQuotes = true
+    }
+    // Tırnak YALNIZ alan başındaysa quote'tur; ortadaki " (örn. 11" inç) literal (sağlamlık).
+    else if (char === '"' && field === '') inQuotes = true
     else if (char === ',') { row.push(field); field = '' }
     else if (char === '\n') { row.push(field); rows.push(row); row = []; field = '' }
     else if (char !== '\r') field += char

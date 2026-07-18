@@ -53,7 +53,7 @@
   {
     "slug": "beyaz-esya",
     "name": "Beyaz Eşya",
-    "emoji": "🧺",
+    "emoji": "🔌",
     "sort_order": 20,
     "verified": true,
     "tax_formula": {
@@ -71,7 +71,9 @@
           "baseline": true
         }
       ]
-    }
+    },
+    "is_purchasable": false,
+    "e1_note": " is_purchasable=false (Oguzhan: OTV %6.7 cok dusuk, sok anlamsiz). emoji 🧺->🔌 (teknolojik). Hayal tarafinda kalir."
   },
   {
     "slug": "televizyon",
