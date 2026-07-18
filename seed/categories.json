@@ -259,7 +259,7 @@
     "emoji": "⛽",
     "sort_order": 70,
     "verified": false,
-    "e1_note": "⚠️ amount_per_unit 0.0 — E1'de maktu ÖTV (TL/litre) girilecek. Şu an sadece KDV. Ürün seed'lenmedi (picker miktar geçirmiyor, E1'e bağlı).",
+    "e1_note": "⚠️ amount_per_unit 0.0 — E1'de maktu ÖTV (TL/litre) girilecek. Şu an sadece KDV. Ürün seed'lenmedi (picker miktar geçirmiyor, E1'e bağlı). is_spendable=false: benzin hayal edilecek sey degil, sadece aldim tarafinda (picker retail 2640 vs hayal vergisiz 1501 kafa karisikligi cozuldu).",
     "tax_formula": {
       "type": "fixed_per_unit",
       "unit": "litre",
@@ -276,7 +276,8 @@
           "baseline": true
         }
       ]
-    }
+    },
+    "is_spendable": false
   },
   {
     "slug": "kitap",

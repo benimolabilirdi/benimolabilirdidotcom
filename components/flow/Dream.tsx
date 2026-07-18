@@ -13,13 +13,16 @@ import { Preview } from '@/components/flow/Preview'
 type Mode = 'self' | 'gift' | 'donation'
 type Step = 'root' | 'recipient' | 'category' | 'product' | 'text' | 'end'
 
-// "Kime?" — sabit alıcı listesi (seed tags.json recipient türü ile hizalı).
+// "Kime?" — sabit alıcı listesi (görselde chip olarak görünür).
 const RECIPIENTS = [
   { emoji: '👩', name: 'Anneme' },
   { emoji: '👨', name: 'Babama' },
   { emoji: '💑', name: 'Eşime' },
+  { emoji: '💗', name: 'Kız Arkadaşıma' },
+  { emoji: '💙', name: 'Erkek Arkadaşıma' },
   { emoji: '🧒', name: 'Çocuğuma' },
   { emoji: '👶', name: 'Yeğenime' },
+  { emoji: '🤝', name: 'Arkadaşıma' },
   { emoji: '👨‍👩‍👧', name: 'Aileme' },
 ]
 
