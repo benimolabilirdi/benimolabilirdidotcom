@@ -67,11 +67,13 @@ export type FlowCategory = {
   products: FlowProduct[]
 }
 
-/** Hayal döngüsünde eklenen kalem → ShareCard items[]. amount = vergisiz fiyat. */
+/** Hayal döngüsünde eklenen kalem → ShareCard items[]. amount = comparison_price. */
 export type DreamItem = {
   emoji: string
-  /** Kişisel metin (boşsa default_line_text, o da yoksa ürün adı — docs/01 §3.1.4d). */
+  /** Ana satır: ürün adı (docs/08 — söz ürün adının altına gelir). */
   text: string
+  /** Seçilen hazır söz; yoksa sadece ürün adı görünür. */
+  quip?: string
   amount: number
   tag?: { emoji: string; name: string }
   /** Bağış satırı yeşil tonlu (docs/03 §3 Zone D). */

@@ -9,8 +9,10 @@ export type ShareCardFormat = 'story' | 'post' | 'square' | 'og'
 
 export type WishItem = {
   emoji: string
-  /** Kullanıcının kendi metni; boşsa ürün adı (docs/01 §3.1.4d). Maks 40 karakter. */
+  /** Ana satır: ürün adı (kimlik). */
   text: string
+  /** Seçilen hazır söz (docs/08). Ürün adının ALTINA gelir; yoksa sadece ürün adı görünür. */
+  quip?: string
   amount: number
   /** Akışta seçilen etiket (occasion > recipient önceliği, docs/03 §4). Yoksa chip çizilmez. */
   tag?: { emoji: string; name: string }

@@ -182,7 +182,7 @@ function WishRow({ item, s }: { item: WishItem; s: number }) {
     >
       <div style={{ display: 'flex', fontSize: 46 * s, lineHeight: 1 }}>{item.emoji}</div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', flexGrow: 1, gap: 6 * s }}>
+      <div style={{ display: 'flex', flexDirection: 'column', flexGrow: 1, gap: 5 * s }}>
         <div
           style={{
             display: 'flex',
@@ -194,6 +194,19 @@ function WishRow({ item, s }: { item: WishItem; s: number }) {
         >
           {item.text}
         </div>
+        {item.quip ? (
+          <div
+            style={{
+              display: 'flex',
+              fontSize: 26 * s,
+              fontStyle: 'italic',
+              color: C.inkSoft,
+              lineHeight: 1.25,
+            }}
+          >
+            {item.quip}
+          </div>
+        ) : null}
         {item.tag ? (
           <div
             style={{

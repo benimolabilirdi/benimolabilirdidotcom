@@ -10,23 +10,14 @@ import type { ShareCardData } from '@/lib/share-card'
 // Ortak liste — 7 satır (R2): 6 kalem 39.400 + benzin 19.660 = 59.060, kalan 340.
 // Böylece döngü gerçekçi biter VE akaryakıt kategorisi GATE'te test edilmiş olur.
 const ITEMS: ShareCardData['items'] = [
-  {
-    emoji: '🥣',
-    text: 'Anneme yeni bir mutfak robotu',
-    amount: 8900,
-    tag: { emoji: '🌷', name: 'Anneler Günü' },
-  },
-  { emoji: '📚', text: 'Bir yıllık kitaplarım', amount: 4200 },
-  {
-    emoji: '🎭',
-    text: 'Kuzenlerle tiyatro gecesi',
-    amount: 3600,
-    tag: { emoji: '🎂', name: 'Doğum Günü' },
-  },
-  { emoji: '🎈', text: "Kapadokya'da 2 gece", amount: 15000 },
-  { emoji: '🧸', text: 'Yeğenime LEGO seti', amount: 2700, tag: { emoji: '🎄', name: 'Yılbaşı' } },
-  { emoji: '❤️', text: 'Depremzedelere bağış', amount: 5000, positive: true },
-  { emoji: '⛽', text: '2 depo benzin', amount: 19660 },
+  // Ürün adı (ana satır) + söz (altında, italik). Sözsüz kalem de var (Diş İmplantı).
+  { emoji: '🥣', text: 'Bosch Mutfak Robotu', quip: 'Annemin mutfak robotu yine benim 🥣', amount: 6800, tag: { emoji: '👩', name: 'Anneme' } },
+  { emoji: '📚', text: 'Hasan Âli Yücel Klasikleri', quip: 'Okuma listem kabarık · rafım sakin', amount: 2700 },
+  { emoji: '🎭', text: 'Tiyatro Bileti x4', quip: 'Perde açıldı · ben dışarıdaydım 🎭', amount: 800, tag: { emoji: '👨‍👩‍👧', name: 'Aileme' } },
+  { emoji: '🎈', text: 'Kapadokya Turu 4 Gün x2', quip: 'Balonlar bensiz uçuyor 🎈', amount: 12000, tag: { emoji: '💑', name: 'Eşime' } },
+  { emoji: '🦷', text: 'Diş İmplantı', amount: 20000 },
+  { emoji: '🧸', text: 'LEGO Seti', quip: 'Yeğen sordu · dayı sustu 🥲', amount: 1300, tag: { emoji: '👶', name: 'Yeğenime' } },
+  { emoji: '❤️', text: 'Yardım Kuruluşuna Bağış', quip: 'İyilik hayali bile güzel ❤️', amount: 5000, positive: true },
 ]
 
 const BASE: ShareCardData = {
@@ -64,17 +55,17 @@ export const KABUL_OTOMOBIL_TASMA: ShareCardData = {
   personaLine: 'Oysa ben maaşımdan %27’ye varan gelir vergisini zaten ödüyorum.',
   remaining: 34000,
   items: [
-    { emoji: '📱', text: 'Bir de telefon alırdım', amount: 70000, tag: { emoji: '🙋', name: 'Kendime' } },
-    { emoji: '🦷', text: 'Ertelediğim diş tedavisi', amount: 20000 },
-    { emoji: '🎈', text: 'Balonlar bensiz uçuyor 🎈', amount: 12000, tag: { emoji: '💑', name: 'Eşime' } },
-    { emoji: '🎓', text: 'Kızıma dershane', amount: 70000, tag: { emoji: '🧒', name: 'Çocuğuma' } },
-    { emoji: '🧊', text: 'Yeni evimize buzdolabı', amount: 26700 },
-    { emoji: '🎮', text: 'Save dosyam hazır · konsol bekliyor', amount: 36000 },
-    { emoji: '📚', text: 'Bir raf dolusu klasik', amount: 6000 },
-    { emoji: '🎭', text: 'Perde açıldı · ben dışarıdaydım 🎭', amount: 5000 },
-    { emoji: '🧸', text: 'Yeğenime LEGO seti', amount: 1300, tag: { emoji: '👶', name: 'Yeğenime' } },
-    { emoji: '🛂', text: 'Dünyayı görme biletim', amount: 14834 },
-    { emoji: '⌚', text: 'Eşime akıllı saat', amount: 22000, tag: { emoji: '💑', name: 'Eşime' } },
-    { emoji: '❤️', text: 'Bir öğrenciye burs desteği', amount: 10000, positive: true },
+    { emoji: '📱', text: 'iPhone 17 Pro Max', quip: 'Pro’su da Max’ı da hayali de güzel 🥲', amount: 70000, tag: { emoji: '🙋', name: 'Kendime' } },
+    { emoji: '🦷', text: 'Diş İmplantı', amount: 20000 },
+    { emoji: '🎈', text: 'Kapadokya Turu 4 Gün x2', quip: 'Balonlar bensiz uçuyor 🎈', amount: 12000, tag: { emoji: '💑', name: 'Eşime' } },
+    { emoji: '🎓', text: 'Üniversite Hazırlık Dershanesi', quip: 'Evladın hayali · babanın hesabı 🥲', amount: 70000, tag: { emoji: '🧒', name: 'Çocuğuma' } },
+    { emoji: '🧊', text: 'Beko Buzdolabı', amount: 26700 },
+    { emoji: '🎮', text: 'PlayStation 5 Slim Digital', quip: 'Save dosyam hazır · konsol bekliyor', amount: 36000 },
+    { emoji: '📚', text: 'Sefiller (Özel Kutulu Set)', quip: 'Okudukça liste uzuyor · bütçe uzamıyor', amount: 6000 },
+    { emoji: '🎭', text: 'Konser Bileti', quip: 'Konseri storylerden izledim 🥲', amount: 5000 },
+    { emoji: '🧸', text: 'LEGO Seti', quip: 'Parça parça biriktirsem mi 🧱', amount: 1300, tag: { emoji: '👶', name: 'Yeğenime' } },
+    { emoji: '🛂', text: '10 Yıllık Pasaportum', quip: 'Hele bunu bir alabileyim · sonra ver elini dünya 🌍', amount: 14834 },
+    { emoji: '⌚', text: 'Huawei Watch GT 6', amount: 22000, tag: { emoji: '💗', name: 'Kız Arkadaşıma' } },
+    { emoji: '❤️', text: 'Yardım Kuruluşuna Bağış', quip: 'Bir öğrenciye burs desteği', amount: 10000, positive: true },
   ],
 }

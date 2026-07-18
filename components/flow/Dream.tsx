@@ -75,8 +75,9 @@ export function Dream({
   function addItem(product: FlowProduct, quipText: string) {
     const item: DreamItem = {
       emoji: product.emoji || category?.emoji || '🎁',
-      // Görsel satırı: söz (varsa) yoksa default metin / ürün adı (docs/08: serbest metin kalktı).
-      text: quipText || product.defaultLineText || product.name,
+      // Ana satır ürün adı; söz altına gelir (docs/08). Söz yoksa sadece ürün adı.
+      text: product.name,
+      quip: quipText || undefined,
       amount: product.comparisonPrice,
       tag: mode === 'gift' && recipient ? { emoji: recipient.emoji, name: recipient.name } : undefined,
       positive: mode === 'donation',
