@@ -81,7 +81,6 @@ function CategoryView({
   onSelect: (s: PurchaseSelection) => void
 }) {
   const [query, setQuery] = useState('')
-  const [freeMode, setFreeMode] = useState(false)
 
   const filtered = useMemo(() => {
     const q = query.trim().toLocaleLowerCase('tr')
@@ -129,7 +128,7 @@ function CategoryView({
         </h1>
       </div>
 
-      {!freeMode && category.products.length > 0 ? (
+      {category.products.length > 0 ? (
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
@@ -147,164 +146,38 @@ function CategoryView({
         />
       ) : null}
 
-      {freeMode ? (
-        <FreeAmount category={category} onSelect={onSelect} onCancel={() => setFreeMode(false)} />
-      ) : (
-        <>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {filtered.map((p) => (
-              <button
-                key={p.id}
-                onClick={() => pickProduct(p)}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 14,
-                  background: 'var(--surface-card)',
-                  border: 'none',
-                  borderRadius: 'var(--r-lg)',
-                  padding: '14px 16px',
-                  boxShadow: 'var(--shadow-sm)',
-                  cursor: 'pointer',
-                  textAlign: 'left',
-                }}
-              >
-                <span style={{ fontSize: 30 }}>{p.emoji || category.emoji}</span>
-                <span style={{ flexGrow: 1, fontFamily: 'var(--font-ui)', fontSize: 16, fontWeight: 600, color: 'var(--text-body)' }}>
-                  {p.name}
-                </span>
-                <span style={{ fontFamily: 'var(--font-ui)', fontVariantNumeric: 'tabular-nums', fontSize: 15, fontWeight: 700, color: 'var(--text-muted)' }}>
-                  {formatTL(p.retailPrice)}
-                </span>
-              </button>
-            ))}
-            {category.products.length === 0 ? (
-              <p style={{ fontFamily: 'var(--font-ui)', fontSize: 15, color: 'var(--text-muted)', margin: '4px 0' }}>
-                Bu kategoride henüz ürün yok — tutarı kendin girebilirsin.
-              </p>
-            ) : filtered.length === 0 ? (
-              <p style={{ fontFamily: 'var(--font-ui)', fontSize: 15, color: 'var(--text-muted)', margin: '4px 0' }}>
-                Aramanla eşleşen ürün yok.
-              </p>
-            ) : null}
-          </div>
-
-          {!category.isFixedPerUnit ? (
-            <button
-              onClick={() => setFreeMode(true)}
-              style={{
-                background: 'none',
-                border: '1px dashed var(--cream-300)',
-                borderRadius: 'var(--r-lg)',
-                padding: '14px 16px',
-                fontFamily: 'var(--font-ui)',
-                fontSize: 15,
-                fontWeight: 600,
-                color: 'var(--text-muted)',
-                cursor: 'pointer',
-              }}
-            >
-              Listede yok, tutarı kendim gireyim →
-            </button>
-          ) : null}
-        </>
-      )}
-    </div>
-  )
-}
-
-function FreeAmount({
-  category,
-  onSelect,
-  onCancel,
-}: {
-  category: FlowCategory
-  onSelect: (s: PurchaseSelection) => void
-  onCancel: () => void
-}) {
-  const [raw, setRaw] = useState('')
-  const [error, setError] = useState('')
-
-  const amount = Number(raw.replace(/[^\d]/g, ''))
-  const valid = amount > 0
-
-  function submit() {
-    const sel = computeSelection(category, amount, `${category.name} (girdiğim tutar)`, category.emoji)
-    if (!sel) {
-      setError('Bu tutar hesaplanamadı, kontrol eder misin?')
-      return
-    }
-    onSelect(sel)
-  }
-
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-      <label style={{ fontFamily: 'var(--font-ui)', fontSize: 15, color: 'var(--text-muted)' }}>
-        {category.name} için ödediğin tutar:
-      </label>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <input
-          inputMode="numeric"
-          value={raw}
-          onChange={(e) => {
-            setRaw(e.target.value)
-            setError('')
-          }}
-          placeholder="Örn. 45.000"
-          style={{
-            flexGrow: 1,
-            fontFamily: 'var(--font-ui)',
-            fontVariantNumeric: 'tabular-nums',
-            fontSize: 20,
-            fontWeight: 700,
-            padding: '14px 16px',
-            borderRadius: 'var(--r-lg)',
-            border: '1px solid var(--cream-300)',
-            background: 'var(--surface-card)',
-            color: 'var(--text-body)',
-            outline: 'none',
-            minWidth: 0,
-          }}
-        />
-        <span style={{ fontFamily: 'var(--font-ui)', fontSize: 18, fontWeight: 700, color: 'var(--text-muted)' }}>TL</span>
-      </div>
-      {error ? <span style={{ fontFamily: 'var(--font-ui)', fontSize: 13, color: 'var(--coral-600)' }}>{error}</span> : null}
-      <div style={{ display: 'flex', gap: 10 }}>
-        <button
-          onClick={onCancel}
-          style={{
-            flexGrow: 1,
-            background: 'var(--surface-card)',
-            border: '1px solid var(--cream-300)',
-            borderRadius: 'var(--r-pill)',
-            padding: '14px',
-            fontFamily: 'var(--font-ui)',
-            fontSize: 15,
-            fontWeight: 600,
-            color: 'var(--text-body)',
-            cursor: 'pointer',
-          }}
-        >
-          Geri
-        </button>
-        <button
-          onClick={submit}
-          disabled={!valid}
-          style={{
-            flexGrow: 2,
-            background: valid ? 'var(--coral-500)' : 'var(--cream-300)',
-            border: 'none',
-            borderRadius: 'var(--r-pill)',
-            padding: '14px',
-            fontFamily: 'var(--font-ui)',
-            fontSize: 16,
-            fontWeight: 700,
-            color: '#fff',
-            cursor: valid ? 'pointer' : 'default',
-          }}
-        >
-          Vergiyi göster →
-        </button>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        {filtered.map((p) => (
+          <button
+            key={p.id}
+            onClick={() => pickProduct(p)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 14,
+              background: 'var(--surface-card)',
+              border: 'none',
+              borderRadius: 'var(--r-lg)',
+              padding: '14px 16px',
+              boxShadow: 'var(--shadow-sm)',
+              cursor: 'pointer',
+              textAlign: 'left',
+            }}
+          >
+            <span style={{ fontSize: 30 }}>{p.emoji || category.emoji}</span>
+            <span style={{ flexGrow: 1, fontFamily: 'var(--font-ui)', fontSize: 16, fontWeight: 600, color: 'var(--text-body)' }}>
+              {p.name}
+            </span>
+            <span style={{ fontFamily: 'var(--font-ui)', fontVariantNumeric: 'tabular-nums', fontSize: 15, fontWeight: 700, color: 'var(--text-muted)' }}>
+              {formatTL(p.retailPrice)}
+            </span>
+          </button>
+        ))}
+        {filtered.length === 0 ? (
+          <p style={{ fontFamily: 'var(--font-ui)', fontSize: 15, color: 'var(--text-muted)', margin: '4px 0' }}>
+            {category.products.length === 0 ? 'Bu kategoride ürün yok.' : 'Aramanla eşleşen ürün yok.'}
+          </p>
+        ) : null}
       </div>
     </div>
   )

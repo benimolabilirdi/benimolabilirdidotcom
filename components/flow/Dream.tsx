@@ -63,7 +63,7 @@ export function Dream({
   // "Aylık Sabit Giderler" birleşik ürün listesi (sabit giderler + akaryakıt kalemleri).
   const fixedCategory = useMemo<FlowCategory>(() => {
     const products = categories.filter((c) => FIXED_SLUGS.includes(c.slug)).flatMap((c) => c.products)
-    return { slug: 'sabit-giderler', name: 'Aylık Sabit Giderler', emoji: '🧾', taxFormula: { type: 'none' }, isFixedPerUnit: false, isPurchasable: false, isSpendable: true, products }
+    return { slug: 'sabit-giderler', name: 'Faturalar & Sabit Giderler', emoji: '🧾', taxFormula: { type: 'none' }, isFixedPerUnit: false, isPurchasable: false, isSpendable: true, products }
   }, [categories])
 
   // Kalan bütçeyle o kategoride alınabilecek en az bir ürün var mı? (comparison_price, docs/08)
@@ -88,9 +88,9 @@ export function Dream({
   function addItem(product: FlowProduct, quipText: string) {
     const item: DreamItem = {
       emoji: product.emoji || category?.emoji || '🎁',
-      // Ana satır ürün adı; söz altına gelir (docs/08). Söz yoksa sadece ürün adı.
+      // Ana satır ürün adı; altına söz. Söz seçilmezse default_line_text'e düş (kira vb.).
       text: product.name,
-      quip: quipText || undefined,
+      quip: quipText || product.defaultLineText || undefined,
       amount: product.comparisonPrice,
       tag: mode === 'gift' && recipient ? { emoji: recipient.emoji, name: recipient.name } : undefined,
       positive: mode === 'donation',
@@ -283,7 +283,7 @@ function Root({
         {showSelf ? opt('🙋', 'Kendime', 'Kendi hayalim', onSelf, 'self') : null}
         {showGift ? opt('🎁', 'Hediye', 'Sevdiklerime', onGift, 'gift') : null}
         {showDonation ? opt('❤️', 'Bağış', 'İyilik için', onDonation, 'donation') : null}
-        {showFixed ? opt('🧾', 'Aylık Sabit Giderler', 'Kira, fatura, abonelik', onFixed, 'fixed') : null}
+        {showFixed ? opt('🧾', 'Faturalar & Sabit Giderler', 'Kira, fatura, abonelik', onFixed, 'fixed') : null}
       </div>
       {hasItems ? (
         <button

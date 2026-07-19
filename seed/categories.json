@@ -406,7 +406,7 @@
   },
   {
     "slug": "sabit-giderler",
-    "name": "Aylık Sabit Giderler",
+    "name": "Faturalar & Sabit Giderler",
     "emoji": "🧾",
     "sort_order": 150,
     "is_purchasable": false,
