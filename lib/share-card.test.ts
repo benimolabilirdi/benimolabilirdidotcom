@@ -35,13 +35,13 @@ describe('taxComponentLabels', () => {
             { max_matrah: null, rate: 0.5 },
           ],
         },
-        { key: 'kdv', label: 'KDV', rate: 0.2 },
+        { key: 'kdv', label: 'KDV', rate: 0.2, baseline: true },
       ],
     }
     const result = calculateTax(119000, TELEFON)
 
-    // Tutara göre sıralı, short_label ile (docs/07 §4): ÖTV > KDV > bandrol(0.12) > fon(0.01).
-    expect(taxComponentLabels(result.lines)).toEqual(['ÖTV', 'KDV', 'TRT payı', 'fon'])
+    // Ekstra bileşenler: baseline KDV HARİÇ (Fable R1), tutara göre: ÖTV > TRT payı > fon.
+    expect(taxComponentLabels(result.lines)).toEqual(['ÖTV', 'TRT payı', 'fon'])
   })
 
   it('vergisiz üründe boş dizi döner (kitap)', () => {

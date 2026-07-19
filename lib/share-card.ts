@@ -50,11 +50,16 @@ export type ShareCardData = {
  * "ÖTV + KDV + TRT payı + Bakanlık fonu" verir (zincir sırası bandrol'ü öne alırdı).
  * İlke: en ağır kalem önce okunsun. 0 TL'lik kalem hiç yazılmaz.
  */
+/**
+ * Ekstra vergi bileşenleri: baseline (standart KDV) HARİÇ ÖTV/bandrol/fon (Fable R1).
+ * Görselde "ÖTV + TRT payı + fon + bunların KDV'siydi" olarak birleşir — çünkü excessTax
+ * bu yüklerin ve onların üstüne binen KDV'nin toplamı.
+ */
 export function taxComponentLabels(
-  lines: Array<{ label: string; shortLabel?: string; amount: number }>
+  lines: Array<{ label: string; shortLabel?: string; amount: number; baseline?: boolean }>
 ): string[] {
   return lines
-    .filter((line) => line.amount > 0)
+    .filter((line) => line.amount > 0 && !line.baseline)
     .slice()
     .sort((a, b) => b.amount - a.amount)
     .map((line) => line.shortLabel ?? line.label) // docs/07 §4: kısa ad varsa o

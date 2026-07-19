@@ -15,7 +15,6 @@ import {
   FORMATS,
   fitItems,
   formatTL,
-  pastCopula,
   type ShareCardData,
   type ShareCardFormat,
   type WishItem,
@@ -37,8 +36,9 @@ const VSCALE: Record<ShareCardFormat, number> = { story: 1, post: 0.86, square: 
  * Son kaleme Türkçe ek fiili doğru ünlü uyumuyla eklenir.
  */
 function taxComponentsLine(components: string[]): string {
-  if (components.length === 0) return 'hiç vergi yoktu'
-  return components.join(' + ') + pastCopula(components[components.length - 1])
+  if (components.length === 0) return 'hiç ekstra vergi yoktu'
+  // Ekstra yükler + onların üstüne binen KDV (Fable R1): "ÖTV + TRT payı + fon + bunların KDV'siydi".
+  return `${components.join(' + ')} + bunların KDV'siydi`
 }
 
 /** docs/03 §3 Zone C: vurgu kelimesinin altında el çizimi dalgalı çizgi. */
@@ -260,8 +260,9 @@ function WishRow({ item, s }: { item: WishItem; s: number }) {
   )
 }
 
-/** Taşan kalemlerin kompakt gösterimi: emoji'ler + "ve N şey daha". */
+/** Taşan kalemler: emoji'ler + "ve N şey daha — toplam X TL" (Fable R4). */
 function OverflowRow({ hidden, s }: { hidden: WishItem[]; s: number }) {
+  const total = hidden.reduce((sum, item) => sum + item.amount, 0)
   return (
     <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 8 * s, paddingLeft: 6 * s, marginTop: 2 * s }}>
       <span style={{ display: 'flex', fontSize: 30 * s, color: C.muted }}>➕</span>
@@ -271,7 +272,7 @@ function OverflowRow({ hidden, s }: { hidden: WishItem[]; s: number }) {
         </span>
       ))}
       <span style={{ display: 'flex', fontSize: 28 * s, color: C.muted, fontWeight: 600 }}>
-        {`ve ${hidden.length} şey daha`}
+        {`ve ${hidden.length} şey daha — toplam ${formatTL(total)}`}
       </span>
     </div>
   )
@@ -381,8 +382,8 @@ export function ShareCard({ format = 'story', data, scale = 1 }: Props) {
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', flexGrow: 1, justifyContent: 'center' }}>
-          <div style={{ display: 'flex', flexWrap: 'wrap', fontFamily: FONT_DISPLAY, fontSize: 22, fontWeight: 800, marginBottom: 12, lineHeight: 1.2 }}>
-            ✨ Bunları da alabilir, ekonomiye can verebilirdim!
+          <div style={{ display: 'flex', fontFamily: FONT_DISPLAY, fontSize: 28, fontWeight: 800, marginBottom: 14 }}>
+            ✨ Şunlar da benim olabilirdi:
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {visible.map((item, i) => (
@@ -448,21 +449,22 @@ export function ShareCard({ format = 'story', data, scale = 1 }: Props) {
         </div>
       ) : null}
 
-      {/* p5 — liste başlığı + dalgalı çizgi */}
+      {/* p5 — liste başlığı + 'olabilirdi' altında dalgalı çizgi (Fable R2) */}
       <div style={{ display: 'flex', flexDirection: 'column', marginTop: 32 * s }}>
         <div
           style={{
             display: 'flex',
             fontFamily: FONT_DISPLAY,
-            fontSize: 40 * hero,
+            fontSize: 48 * hero,
             fontWeight: 800,
-            lineHeight: 1.18,
+            lineHeight: 1.2,
           }}
         >
-          ✨ Bunları da alabilir, ekonomiye can verebilirdim!
+          ✨ Şunlar da benim olabilirdi:
         </div>
-        <div style={{ display: 'flex', marginTop: 4 * s }}>
-          <WavyUnderline width={380 * s} color={C.accent} />
+        {/* Dalgalı çizgi 'olabilirdi:' kelimesinin altına hizalı (sağa kaydırılmış). */}
+        <div style={{ display: 'flex', paddingLeft: 175 * hero, marginTop: 2 * s }}>
+          <WavyUnderline width={250 * hero} color={C.accent} />
         </div>
       </div>
 
@@ -504,7 +506,7 @@ export function ShareCard({ format = 'story', data, scale = 1 }: Props) {
           benimolabilirdi.com
         </div>
         <div style={{ display: 'flex', fontSize: 21 * s, color: C.muted, marginTop: 8 * s, textAlign: 'center' }}>
-          fiyatlar temsilidir · ÖTV+KDV+fon dahil · hesap detayı sitede
+          fiyatlar temsilidir · ÖTV + TRT payı + fon + bunların KDV&apos;si · hesap detayı sitede
         </div>
       </div>
     </div>

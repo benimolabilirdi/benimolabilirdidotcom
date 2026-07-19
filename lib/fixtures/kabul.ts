@@ -1,71 +1,127 @@
 /**
- * docs/03 §7 kabul testi senaryosu — B2 GATE'inde render edilip onaya sunulur.
- *
- * Rakamlar dokümandan AYNEN alındı (iPhone 119.000 / vergi 59.400). Dikkat: lib/tax.ts
- * aynı telefon için 60.494,59 hesaplıyor — aradaki fark PRD §4.2'nin yuvarlak örnek
- * değeri kullanmasından. Bu fixture görsel kabul içindir, hesap doğruluğu için değil.
+ * docs/03 §7 kabul senaryoları — GERÇEK MOTORDAN beslenir (Fable R3): elle rakam yok.
+ * Satın alım excessTax'i ve her hayal kalemi comparison_price'ı calculateTax ile hesaplanır.
+ * Kancalar: iPhone şok 48.794 · Bosch ~6.373 · PS5 ~30.000.
  */
-import type { ShareCardData } from '@/lib/share-card'
+import categoriesJson from '@/seed/categories.json'
+import { calculateTax, type TaxFormula } from '@/lib/tax'
+import { taxComponentLabels, type ShareCardData, type WishItem } from '@/lib/share-card'
 
-// Ortak liste — 7 satır (R2): 6 kalem 39.400 + benzin 19.660 = 59.060, kalan 340.
-// Böylece döngü gerçekçi biter VE akaryakıt kategorisi GATE'te test edilmiş olur.
-const ITEMS: ShareCardData['items'] = [
-  // Ürün adı (ana satır) + söz (altında, italik). Sözsüz kalem de var (Diş İmplantı).
-  { emoji: '🥣', text: 'Bosch Mutfak Robotu', quip: 'Annemin mutfak robotu yine benim 🥣', amount: 6800, tag: { emoji: '👩', name: 'Anneme' } },
-  { emoji: '📚', text: 'Hasan Âli Yücel Klasikleri', quip: 'Okuma listem kabarık · rafım sakin', amount: 2700 },
-  { emoji: '🎭', text: 'Tiyatro Bileti x4', quip: 'Perde açıldı · ben dışarıdaydım 🎭', amount: 800, tag: { emoji: '👨‍👩‍👧', name: 'Aileme' } },
-  { emoji: '🎈', text: 'Kapadokya Turu 4 Gün x2', quip: 'Balonlar bensiz uçuyor 🎈', amount: 12000, tag: { emoji: '💑', name: 'Eşime' } },
-  { emoji: '🦷', text: 'Diş İmplantı', amount: 20000 },
-  { emoji: '🧸', text: 'LEGO Seti', quip: 'Yeğen sordu · dayı sustu 🥲', amount: 1300, tag: { emoji: '👶', name: 'Yeğenime' } },
-  { emoji: '❤️', text: 'Yardım Kuruluşuna Bağış', quip: 'İyilik hayali bile güzel ❤️', amount: 5000, positive: true },
+const formulaBySlug = new Map(
+  (categoriesJson as Array<{ slug: string; tax_formula: TaxFormula }>).map((c) => [c.slug, c.tax_formula])
+)
+const formula = (slug: string) => formulaBySlug.get(slug)!
+
+type ItemSpec = {
+  name: string
+  emoji: string
+  retail: number
+  slug: string
+  quip?: string
+  chip?: { emoji: string; name: string }
+  positive?: boolean
+}
+
+/** Hayal kalemi: comparison_price motordan (Fable R3). */
+function item(spec: ItemSpec): WishItem {
+  const r = calculateTax(spec.retail, formula(spec.slug))
+  return {
+    emoji: spec.emoji,
+    text: spec.name,
+    quip: spec.quip,
+    amount: r.comparisonPrice,
+    tag: spec.chip,
+    positive: spec.positive,
+  }
+}
+
+/**
+ * Satın alım senaryosu. Gerçek akış gibi: adaylardan yalnız kalan bütçeye SIĞANLAR eklenir
+ * (aşan atlanır), remaining dürüst kalır. excessTax + bileşenler + comparison'lar motordan.
+ */
+function scenario(
+  product: { name: string; emoji: string; retail: number; slug: string },
+  pool: ItemSpec[],
+  personaLine?: string
+): ShareCardData {
+  const r = calculateTax(product.retail, formula(product.slug))
+  let remaining = r.excessTax
+  const items: WishItem[] = []
+  for (const spec of pool) {
+    const it = item(spec)
+    if (it.amount > 0 && it.amount <= remaining) {
+      items.push(it)
+      remaining -= it.amount
+    }
+  }
+  return {
+    product: { name: product.name, emoji: product.emoji },
+    retailPrice: r.retailPrice,
+    totalTax: r.totalTax,
+    excessTax: r.excessTax,
+    taxComponents: taxComponentLabels(r.lines),
+    personaLine,
+    remaining: Math.round(remaining * 100) / 100,
+    items,
+  }
+}
+
+const PERSONA = 'Oysa ben maaşımdan %27’ye varan gelir vergisini zaten ödüyorum.'
+const IPHONE = { name: 'iPhone 17', emoji: '📱', retail: 119000, slug: 'telefon' }
+
+// iPhone 17 (119.000, telefon) → excess ≈ 48.794. Chip'ler R5: occasion > recipient.
+// Havuz büyükten küçüğe; sonda ucuz kalemler → bütçe küçük kalana kadar dolar.
+const IPHONE_POOL: ItemSpec[] = [
+  { name: 'PlayStation 5 Slim Digital', emoji: '🎮', retail: 36000, slug: 'oyun-konsolu', quip: 'Save dosyam hazır · konsol bekliyor' },
+  { name: 'Bosch Mutfak Robotu', emoji: '🥣', retail: 6800, slug: 'beyaz-esya', quip: 'Annemin mutfak robotu yine benim 🥣', chip: { emoji: '🌷', name: 'Anneler Günü' } },
+  { name: 'Konser Bileti x2', emoji: '🎤', retail: 5000, slug: 'kultur-sanat', quip: 'Konseri storylerden izledim 🥲', chip: { emoji: '💑', name: 'Eşime' } },
+  { name: 'Hasan Âli Yücel Klasikleri', emoji: '📚', retail: 2700, slug: 'kitap', quip: 'Okuma listem kabarık · rafım sakin' },
+  { name: 'LEGO Seti', emoji: '🧱', retail: 1300, slug: 'oyuncak', quip: 'Parça parça biriktirsem mi 🧱', chip: { emoji: '🎂', name: 'Doğum Günü' } },
+  { name: 'Tiyatro Bileti x4', emoji: '🎭', retail: 800, slug: 'kultur-sanat', quip: 'Perde açıldı · ben dışarıdaydım 🎭', chip: { emoji: '👨‍👩‍👧', name: 'Aileme' } },
+  { name: 'Barbie Bebek', emoji: '🎀', retail: 1400, slug: 'oyuncak', chip: { emoji: '🧒', name: 'Çocuğuma' } },
+  { name: 'Çocuk Klasikleri (15 Kitap)', emoji: '📚', retail: 890, slug: 'kitap', chip: { emoji: '👶', name: 'Yeğenime' } },
+  { name: 'Yardım Kuruluşuna Bağış', emoji: '❤️', retail: 5000, slug: 'bagis', quip: 'İyilik hayali bile güzel ❤️', positive: true },
 ]
 
-const BASE: ShareCardData = {
-  product: { name: 'iPhone 17', emoji: '📱' },
-  retailPrice: 119000,
-  totalTax: 59400,
-  // Ekstra vergi (görselin büyük rakamı): standart KDV hariç, üstüne binen kısım (docs/01 §4.7).
-  excessTax: 48000,
-  // Telefonun gerçek bileşenleri, tutara göre (taxComponentLabels'ın üreteceği sıra).
-  // bandrol+fon base:matrah ile ayrıldı → dört kalem, çarpan yine 1.13 (vergi şişmez).
-  taxComponents: ['ÖTV', 'KDV', 'TRT payı', 'fon'],
-  remaining: 340, // 59.400 − 59.060
-  items: ITEMS,
-}
-
-/** GATE varyant 1: persona'lı (ucretli_27, docs/07 §3 image_line). */
-export const KABUL_PERSONALI: ShareCardData = {
-  ...BASE,
-  personaLine: 'Oysa ben maaşımdan %27’ye varan gelir vergisini zaten ödüyorum.',
-}
-
-/** GATE varyant 2: persona'sız ("yok" seçeneği — p4 basılmaz). */
-export const KABUL_PERSONASIZ: ShareCardData = BASE
-
-// Geriye dönük ad (eski importlar için).
+export const KABUL_PERSONALI: ShareCardData = scenario(IPHONE, IPHONE_POOL, PERSONA)
+export const KABUL_PERSONASIZ: ShareCardData = scenario(IPHONE, IPHONE_POOL)
 export const KABUL_SENARYOSU = KABUL_PERSONASIZ
 
-/** Taşma senaryosu: otomobil (dev ekstra vergi) + 12 hayal kalemi → emoji özeti testi. */
-export const KABUL_OTOMOBIL_TASMA: ShareCardData = {
-  product: { name: 'Toyota Corolla', emoji: '🚗' },
-  retailPrice: 2284000,
-  totalTax: 1235000,
-  excessTax: 1025000,
-  taxComponents: ['ÖTV', 'KDV', 'TRT payı'],
-  personaLine: 'Oysa ben maaşımdan %27’ye varan gelir vergisini zaten ödüyorum.',
-  remaining: 34000,
-  items: [
-    { emoji: '📱', text: 'iPhone 17 Pro Max', quip: 'Pro’su da Max’ı da hayali de güzel 🥲', amount: 70000, tag: { emoji: '🙋', name: 'Kendime' } },
-    { emoji: '🦷', text: 'Diş İmplantı', amount: 20000 },
-    { emoji: '🎈', text: 'Kapadokya Turu 4 Gün x2', quip: 'Balonlar bensiz uçuyor 🎈', amount: 12000, tag: { emoji: '💑', name: 'Eşime' } },
-    { emoji: '🎓', text: 'Üniversite Hazırlık Dershanesi', quip: 'Evladın hayali · babanın hesabı 🥲', amount: 70000, tag: { emoji: '🧒', name: 'Çocuğuma' } },
-    { emoji: '🧊', text: 'Beko Buzdolabı', amount: 26700 },
-    { emoji: '🎮', text: 'PlayStation 5 Slim Digital', quip: 'Save dosyam hazır · konsol bekliyor', amount: 36000 },
-    { emoji: '📚', text: 'Sefiller (Özel Kutulu Set)', quip: 'Okudukça liste uzuyor · bütçe uzamıyor', amount: 6000 },
-    { emoji: '🎭', text: 'Konser Bileti', quip: 'Konseri storylerden izledim 🥲', amount: 5000 },
-    { emoji: '🧸', text: 'LEGO Seti', quip: 'Parça parça biriktirsem mi 🧱', amount: 1300, tag: { emoji: '👶', name: 'Yeğenime' } },
-    { emoji: '🛂', text: '10 Yıllık Pasaportum', quip: 'Hele bunu bir alabileyim · sonra ver elini dünya 🌍', amount: 14834 },
-    { emoji: '⌚', text: 'Huawei Watch GT 6', amount: 22000, tag: { emoji: '💗', name: 'Kız Arkadaşıma' } },
-    { emoji: '❤️', text: 'Yardım Kuruluşuna Bağış', quip: 'Bir öğrenciye burs desteği', amount: 10000, positive: true },
+/** Simit/çay kapanışı demosu: A56 (excess ~11.071); havuz bütçeyi ~8 TL'ye indirir → "simit yerim". */
+export const KABUL_SIMIT: ShareCardData = scenario(
+  { name: 'Samsung Galaxy A56', emoji: '📱', retail: 27000, slug: 'telefon' },
+  [
+    { name: 'Bosch Mutfak Robotu', emoji: '🥣', retail: 6800, slug: 'beyaz-esya', quip: 'Annemin mutfak robotu yine benim 🥣', chip: { emoji: '🌷', name: 'Anneler Günü' } },
+    { name: 'Özel Tiyatro Bileti x2', emoji: '🎭', retail: 1600, slug: 'kultur-sanat', chip: { emoji: '💑', name: 'Eşime' } },
+    { name: 'Festival Bileti', emoji: '🎪', retail: 1000, slug: 'kultur-sanat' },
+    { name: 'Çocuk Klasikleri (15 Kitap)', emoji: '📚', retail: 890, slug: 'kitap', chip: { emoji: '👶', name: 'Yeğenime' } },
+    { name: 'Sinema Bileti x2', emoji: '🎬', retail: 500, slug: 'kultur-sanat' },
+    { name: 'Resim-Heykel Atölyesi', emoji: '🎨', retail: 450, slug: 'kultur-sanat', quip: 'Alkışı içimden tuttum' },
+    { name: 'İlyada', emoji: '📕', retail: 287, slug: 'kitap' },
+    { name: 'Karamazov Kardeşler', emoji: '📕', retail: 270, slug: 'kitap' },
+    { name: 'Sinema Bileti', emoji: '🎬', retail: 250, slug: 'kultur-sanat' },
+    { name: 'Tiyatro Bileti', emoji: '🎭', retail: 200, slug: 'kultur-sanat' },
+    { name: 'Venedik Taciri', emoji: '📕', retail: 63, slug: 'kitap' },
+    { name: 'Bir Kuzey Macerası', emoji: '📕', retail: 37, slug: 'kitap' },
+  ]
+)
+
+/** Taşma senaryosu: otomobil (dev ekstra vergi) + çok kalem → emoji özeti + toplam (R4). */
+export const KABUL_OTOMOBIL_TASMA: ShareCardData = scenario(
+  { name: 'Renault Yeni Clio', emoji: '🚗', retail: 1830000, slug: 'otomobil' },
+  [
+    { name: '1 Yıllık Kira', emoji: '🏠', retail: 480000, slug: 'sabit-giderler' },
+    { name: 'iPhone 17 Pro Max', emoji: '📱', retail: 122000, slug: 'telefon', quip: 'Pro’su da Max’ı da hayali de güzel 🥲', chip: { emoji: '🙋', name: 'Kendime' } },
+    { name: 'Madrid-Barcelona Turu 6 Gün x2', emoji: '✈️', retail: 70000, slug: 'tatil', quip: 'İspanyolca öğrendim · gidemedim 🥲', chip: { emoji: '💑', name: 'Eşime' } },
+    { name: 'Üniversite Hazırlık Dershanesi', emoji: '🎓', retail: 70000, slug: 'egitim', quip: 'Evladın hayali · babanın hesabı 🥲', chip: { emoji: '🎒', name: 'Okul' } },
+    { name: 'Bosch Buzdolabı', emoji: '🧊', retail: 40000, slug: 'beyaz-esya' },
+    { name: 'PlayStation 5 Slim Digital', emoji: '🎮', retail: 36000, slug: 'oyun-konsolu', quip: 'Save dosyam hazır · konsol bekliyor' },
+    { name: 'Diş İmplantı', emoji: '🦷', retail: 20000, slug: 'saglik' },
+    { name: 'Sefiller (Özel Kutulu Set)', emoji: '📚', retail: 6000, slug: 'kitap', quip: 'Okudukça liste uzuyor · bütçe uzamıyor' },
+    { name: 'Konser Bileti x2', emoji: '🎤', retail: 5000, slug: 'kultur-sanat', quip: 'Konseri storylerden izledim 🥲' },
+    { name: 'Barbie Bebek', emoji: '🎀', retail: 1400, slug: 'oyuncak', chip: { emoji: '🧒', name: 'Çocuğuma' } },
+    { name: 'LEGO Seti', emoji: '🧱', retail: 1300, slug: 'oyuncak', chip: { emoji: '🎂', name: 'Doğum Günü' } },
+    { name: 'Yardım Kuruluşuna Bağış', emoji: '❤️', retail: 50000, slug: 'bagis', quip: 'Bir öğrenciye burs desteği', positive: true },
   ],
-}
+  PERSONA
+)
