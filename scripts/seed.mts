@@ -165,6 +165,7 @@ console.log(`  ${DRY_RUN ? 'atlandı (dry-run)' : 'upsert edildi'}`)
 const rows = [
   ...parseCsv(readFileSync('seed/products.csv', 'utf8')),
   ...parseCsv(readFileSync('seed/products-harclar-ek.csv', 'utf8')),
+  ...parseCsv(readFileSync('seed/products-sabit-ek.csv', 'utf8')),
 ]
 const categoryBySlug = new Map(categories.map((c) => [c.slug, c]))
 const tagSlugs = new Set(tags.map((t) => t.slug))

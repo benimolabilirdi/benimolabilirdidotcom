@@ -279,7 +279,7 @@
         }
       ]
     },
-    "is_spendable": false
+    "is_spendable": true
   },
   {
     "slug": "kitap",
@@ -400,6 +400,18 @@
     "is_purchasable": false,
     "verified": true,
     "e1_note": "Vergi yok, 1:1 geçer (PRD §4.4). Teyide gerek yok.",
+    "tax_formula": {
+      "type": "none"
+    }
+  },
+  {
+    "slug": "sabit-giderler",
+    "name": "Aylık Sabit Giderler",
+    "emoji": "🧾",
+    "sort_order": 150,
+    "is_purchasable": false,
+    "verified": true,
+    "e1_note": "Aylik sabit giderler (kira/aidat/fatura/abonelik). Hayal tarafinda 4. kok secenek. type none: face-value (excess yok, comparison=retail).",
     "tax_formula": {
       "type": "none"
     }

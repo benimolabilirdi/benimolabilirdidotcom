@@ -10,8 +10,11 @@ import { formatTL } from '@/lib/share-card'
 import { applicableQuips, type DreamItem, type FlowCategory, type FlowProduct, type PurchaseSelection, type Quip } from '@/lib/flow'
 import { Preview } from '@/components/flow/Preview'
 
-type Mode = 'self' | 'gift' | 'donation'
+type Mode = 'self' | 'gift' | 'donation' | 'fixed'
 type Step = 'root' | 'recipient' | 'category' | 'product' | 'quip' | 'end'
+
+// "Aylık Sabit Giderler" kök seçeneği altında toplanan kategoriler (akaryakıt + sabit giderler).
+const FIXED_SLUGS = ['sabit-giderler', 'akaryakit']
 
 // "Kime?" — sabit alıcı listesi (görselde chip olarak görünür).
 const RECIPIENTS = [
@@ -48,11 +51,20 @@ export function Dream({
 
   const bagis = categories.find((c) => c.slug === 'bagis') ?? null
 
-  // Hayal kategorileri: harcanabilir, bağış hariç (bağış ayrı kök seçenek).
+  // Hayal kategorileri: harcanabilir; bağış ve sabit giderler (akaryakıt dahil) ayrı kök seçenek.
   const dreamCategories = useMemo(
-    () => categories.filter((c) => c.isSpendable && c.slug !== 'bagis' && c.products.length > 0),
+    () =>
+      categories.filter(
+        (c) => c.isSpendable && c.slug !== 'bagis' && !FIXED_SLUGS.includes(c.slug) && c.products.length > 0
+      ),
     [categories]
   )
+
+  // "Aylık Sabit Giderler" birleşik ürün listesi (sabit giderler + akaryakıt kalemleri).
+  const fixedCategory = useMemo<FlowCategory>(() => {
+    const products = categories.filter((c) => FIXED_SLUGS.includes(c.slug)).flatMap((c) => c.products)
+    return { slug: 'sabit-giderler', name: 'Aylık Sabit Giderler', emoji: '🧾', taxFormula: { type: 'none' }, isFixedPerUnit: false, isPurchasable: false, isSpendable: true, products }
+  }, [categories])
 
   // Kalan bütçeyle o kategoride alınabilecek en az bir ürün var mı? (comparison_price, docs/08)
   const affordable = (p: FlowProduct) => p.comparisonPrice > 0 && p.comparisonPrice <= remaining
@@ -62,6 +74,7 @@ export function Dream({
   )
   const canSelfOrGift = affordableCategories.length > 0
   const canDonate = !!bagis?.products.some(affordable)
+  const canFixed = fixedCategory.products.some(affordable)
 
   // Kataloğun en ucuz adil fiyatı — bitiş eşiği (docs/01 §3.1.4f).
   const cheapest = useMemo(() => {
@@ -106,6 +119,7 @@ export function Dream({
           showSelf={canSelfOrGift}
           showGift={canSelfOrGift}
           showDonation={canDonate}
+          showFixed={canFixed}
           onSelf={() => {
             setMode('self')
             setStep('category')
@@ -117,6 +131,11 @@ export function Dream({
           onDonation={() => {
             setMode('donation')
             setCategory(bagis)
+            setStep('product')
+          }}
+          onFixed={() => {
+            setMode('fixed')
+            setCategory(fixedCategory)
             setStep('product')
           }}
           onComplete={() => setStep('end')}
@@ -152,7 +171,8 @@ export function Dream({
         <ProductList
           category={category}
           remaining={remaining}
-          onBack={() => setStep(mode === 'donation' ? 'root' : 'category')}
+          hideHeading={mode === 'fixed'}
+          onBack={() => setStep(mode === 'donation' || mode === 'fixed' ? 'root' : 'category')}
           onPick={(p) => {
             setPending(p)
             setStep('quip')
@@ -208,9 +228,11 @@ function Root({
   showSelf,
   showGift,
   showDonation,
+  showFixed,
   onSelf,
   onGift,
   onDonation,
+  onFixed,
   onComplete,
   onBack,
 }: {
@@ -218,9 +240,11 @@ function Root({
   showSelf: boolean
   showGift: boolean
   showDonation: boolean
+  showFixed: boolean
   onSelf: () => void
   onGift: () => void
   onDonation: () => void
+  onFixed: () => void
   onComplete: () => void
   onBack: () => void
 }) {
@@ -259,6 +283,7 @@ function Root({
         {showSelf ? opt('🙋', 'Kendime', 'Kendi hayalim', onSelf, 'self') : null}
         {showGift ? opt('🎁', 'Hediye', 'Sevdiklerime', onGift, 'gift') : null}
         {showDonation ? opt('❤️', 'Bağış', 'İyilik için', onDonation, 'donation') : null}
+        {showFixed ? opt('🧾', 'Aylık Sabit Giderler', 'Kira, fatura, abonelik', onFixed, 'fixed') : null}
       </div>
       {hasItems ? (
         <button
@@ -313,11 +338,13 @@ function Chooser({
 function ProductList({
   category,
   remaining,
+  hideHeading,
   onPick,
   onBack,
 }: {
   category: FlowCategory
   remaining: number
+  hideHeading?: boolean
   onPick: (p: FlowProduct) => void
   onBack: () => void
 }) {
@@ -328,9 +355,11 @@ function ProductList({
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
       <BackLink onClick={onBack} />
-      <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 20, margin: 0 }}>
-        {category.emoji} {category.name}
-      </h2>
+      {!hideHeading ? (
+        <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 20, margin: 0 }}>
+          {category.emoji} {category.name}
+        </h2>
+      ) : null}
       {affordable.length === 0 ? (
         <p style={{ fontFamily: 'var(--font-ui)', fontSize: 15, color: 'var(--text-muted)' }}>
           Kalan bütçeyle bu kategoride bir şey alamıyorsun. Geri dönüp başka kategori dene.
