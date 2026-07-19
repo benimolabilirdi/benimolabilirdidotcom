@@ -9,6 +9,7 @@
  */
 import { useRef, useState } from 'react'
 import { toPng } from 'html-to-image'
+import { track } from '@vercel/analytics'
 import { ShareCard } from '@/components/ShareCard'
 import { FORMATS, type ShareCardData, type ShareCardFormat } from '@/lib/share-card'
 
@@ -55,6 +56,7 @@ export function ShareActions({ data, format, shareUrl }: Props) {
       a.download = fileName
       a.click()
       URL.revokeObjectURL(url)
+      track('download', { format })
     } catch {
       setNote('Görsel oluşturulamadı, tekrar dener misin?')
     } finally {
@@ -77,6 +79,7 @@ export function ShareActions({ data, format, shareUrl }: Props) {
       // canShare dosyayı destekliyor mu? Değilse indirmeye düş.
       if (navigator.canShare?.(shareData)) {
         await navigator.share(shareData)
+        track('share', { format })
       } else {
         await handleDownload()
         setNote('Paylaşım bu cihazda desteklenmiyor — görsel indirildi.')
@@ -95,6 +98,7 @@ export function ShareActions({ data, format, shareUrl }: Props) {
     if (!shareUrl) return
     try {
       await navigator.clipboard.writeText(shareUrl)
+      track('copy_link', { format })
       setNote('Link kopyalandı ✓')
     } catch {
       setNote('Link kopyalanamadı.')
