@@ -80,6 +80,7 @@ export default function HesapPage() {
       <p style={{ ...p, fontSize: 17 }}>
         Kısaca: bir ürünün raf fiyatının içinden, satılabilmesi için ödenen vergileri geri çıkarıyoruz.
         Rakamlar resmi mevzuata dayanır, yorum içermez. Aşağıda yöntemi ve kaynakları açıkça bulacaksın.
+        Vergi vatandaşlık görevidir; bizim derdimiz oranlar ve şeffaflık.
       </p>
 
       <h2 style={h2}>Vergi zinciri</h2>
@@ -128,14 +129,19 @@ export default function HesapPage() {
         Otomobil ÖTV’si motor hacmine ve fiyat dilimine göre değişen kademeli bir tablodan hesaplanır;
         elektrikli araçlarda motor gücü sınıfı üretici verisinden alınır.
       </p>
+      <p style={muted}>
+        Pasaport ve ehliyet gibi harç kalemlerinde “ekstra vergi” hesaplanmaz; o satırlarda tutarın
+        zaten tamamı kamuya ödenen harçtır.
+      </p>
 
       <h2 style={h2}>Kaynaklar</h2>
       <ul style={{ ...muted, paddingLeft: 20, display: 'flex', flexDirection: 'column', gap: 6 }}>
         <li>Otomobil ÖTV kademeleri — 10115 sayılı Cumhurbaşkanı Kararı (Resmî Gazete, 24.07.2025).</li>
         <li>TRT bandrol oranları — 2022/5610 sayılı Cumhurbaşkanı Kararı (RG 26.05.2022), yürürlükte.</li>
         <li>ÖTV oranları — 4760 sayılı ÖTV Kanunu’na ekli (IV) sayılı liste.</li>
+        <li>Kültür payı — cep telefonlarından alınan %1’lik Kültür ve Turizm Bakanlığı kesintisi (ilgili mevzuat).</li>
         <li>KDV %20 — 3065 sayılı KDV Kanunu ve ilgili Bakanlar Kurulu/CB kararları.</li>
-        <li>Akaryakıt maktu ÖTV — ilgili ÖTV tutar kararları (dönemsel güncellenir).</li>
+        <li>Akaryakıt maktu ÖTV — 10799 sayılı Karar ve dönemsel güncellemeleri.</li>
       </ul>
 
       <h2 style={h2}>Dürüstlük notları</h2>
@@ -152,6 +158,10 @@ export default function HesapPage() {
         <li>
           <b>Akaryakıtta eşel mobil.</b> Fiilen tahsil edilen ÖTV dönemsel olarak tarife tutarından
           sapabilir; hesapta güncel tarife esas alınır.
+        </li>
+        <li>
+          <b>Bazı küçük vergileri saymıyoruz.</b> Elektrik ve doğalgaz faturalarındaki BTV gibi küçük
+          kalemler hesaba katılmamıştır — yani gösterdiğimiz rakamlar gerçeğin altındadır, üstünde değil.
         </li>
         <li>
           <b>Amaç farkındalık.</b> Bu bir vergi danışmanlığı değil; siyasi bir iddia hiç değil. Sadece

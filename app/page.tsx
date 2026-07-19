@@ -1,35 +1,12 @@
 /**
  * Landing (C1, docs/01 §3.1.1, docs/03, ui_kits/app/Landing.jsx).
- * Değer önerisi + "Ne aldın?" CTA + canlı vergi sayacı. Mobil öncelikli (390px).
+ * Değer önerisi + "Ne aldın?" CTA. Mobil öncelikli (390px).
+ * Not: canlı sayaç v1 kapsamı dışı — stats altyapısı DB'de durur ama UI'da gösterilmez.
  */
 import Link from 'next/link'
 import { Wordmark } from '@/components/Wordmark'
-import { LiveCounter } from '@/components/LiveCounter'
-import { createClient } from '@/lib/supabase/server'
 
-// Sayaç canlı veri; sayfa her istekte tazelensin (statik prerender değil).
-export const dynamic = 'force-dynamic'
-
-async function getStats(): Promise<{ totalTax: number; totalImages: number }> {
-  try {
-    const supabase = createClient()
-    const { data } = await supabase
-      .from('stats')
-      .select('total_tax_calculated, total_images_generated')
-      .eq('id', 1)
-      .single()
-    return {
-      totalTax: Number(data?.total_tax_calculated ?? 0),
-      totalImages: Number(data?.total_images_generated ?? 0),
-    }
-  } catch {
-    return { totalTax: 0, totalImages: 0 }
-  }
-}
-
-export default async function Home() {
-  const stats = await getStats()
-
+export default function Home() {
   return (
     <main
       style={{
@@ -46,7 +23,7 @@ export default async function Home() {
         <Wordmark size={20} />
       </div>
 
-      {/* orta — sayaç (yalnız gerçek kullanım varsa) + değer önerisi */}
+      {/* orta — değer önerisi */}
       <div
         style={{
           flexGrow: 1,
@@ -57,10 +34,6 @@ export default async function Home() {
           padding: '8px 0',
         }}
       >
-        {stats.totalTax > 0 ? (
-          <LiveCounter totalTax={stats.totalTax} totalImages={stats.totalImages} />
-        ) : null}
-
         <h1
           style={{
             fontFamily: 'var(--font-display)',
