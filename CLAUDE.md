@@ -7,7 +7,15 @@ Referans dokümanlar: docs/ altında PRD, data-model, visual-spec. ÇELİŞKİDE
 ## Stack
 - Next.js 14 App Router + TypeScript + Tailwind + shadcn/ui
 - Supabase: DB + Auth (sadece admin) — şema docs/02-data-model.md'de, AYNEN uygula
-- Vercel deploy. Git author: "Oguzhan Sadikoglu" (Vercel blocked deployment önlemi)
+- Vercel deploy. Git author: "Oguzhan Sadikoglu" <oguz426@gmail.com>
+  ⚠️ E-POSTA KRİTİK: repo `benimolabilirdi` GitHub hesabında ama Vercel `oguz426@gmail.com`
+  hesabına bağlı. Commit e-postası benimolabilirdi@gmail.com ise Vercel "blocked deployment —
+  commit email could not be matched to a Git account" der ve build hiç başlamaz.
+  Vercel yalnızca HEAD'in author'ına bakar; geçmiş commit'ler önemsiz.
+- Deploy ELLE yapılır: `npx --yes vercel@50 --prod` (GitHub entegrasyonu iki hesap
+  yüzünden bağlanamadı, push deploy TETİKLEMEZ). Sürüm sabitlemesi zorunlu:
+  vercel@56 bu makinede npm "Invalid Version" ile kurulmuyor (Node 26 + npm 11).
+  Build ~2-4 dk sürer; CLI beklerken yerelde %0 CPU görünür, bu normaldir.
 - Görsel üretimi: tek React bileşeni <ShareCard format="story|post|og" />
   - client indirme: html-to-image → PNG
   - OG: @vercel/og (satori) — AYNI bileşen, ayrı bundle kısıtlarına dikkat
