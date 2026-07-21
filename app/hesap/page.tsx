@@ -38,10 +38,33 @@ const card: CSSProperties = {
   gap: 8,
 }
 
-function Row({ label, value, strong }: { label: string; value: string; strong?: boolean }) {
+/**
+ * Etiket + değer satırı. Değer varsayılan olarak SARAR: formül metinleri (ör. otomobil)
+ * 390px'e sığmıyor ve nowrap kartı sayfa dışına taşırıyordu. Tutarlarda nowrap={true}
+ * verilir — "≈ 50.020 TL" boşluktan bölünmesin.
+ */
+function Row({
+  label,
+  value,
+  strong,
+  nowrap,
+}: {
+  label: string
+  value: string
+  strong?: boolean
+  nowrap?: boolean
+}) {
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'baseline' }}>
-      <span style={{ fontFamily: 'var(--font-ui)', fontSize: 15, color: strong ? 'var(--navy-800)' : 'var(--text-muted)', fontWeight: strong ? 700 : 500 }}>
+      <span
+        style={{
+          fontFamily: 'var(--font-ui)',
+          fontSize: 15,
+          color: strong ? 'var(--navy-800)' : 'var(--text-muted)',
+          fontWeight: strong ? 700 : 500,
+          minWidth: 0,
+        }}
+      >
         {label}
       </span>
       <span
@@ -51,7 +74,9 @@ function Row({ label, value, strong }: { label: string; value: string; strong?: 
           fontSize: strong ? 17 : 15,
           fontWeight: strong ? 800 : 600,
           color: strong ? 'var(--coral-600)' : 'var(--text-body)',
-          whiteSpace: 'nowrap',
+          minWidth: 0,
+          textAlign: 'right',
+          whiteSpace: nowrap ? 'nowrap' : 'normal',
         }}
       >
         {value}
@@ -101,11 +126,11 @@ export default function HesapPage() {
 
       <h2 style={h2}>Örnek: iPhone 17 Pro Max 256 GB</h2>
       <div style={card}>
-        <Row label="Raf fiyatı" value="122.000 TL" />
-        <Row label="Vergisiz değer (matrah)" value="≈ 59.980 TL" />
-        <Row label="Sadece KDV’li olsaydı" value="≈ 71.980 TL" />
+        <Row label="Raf fiyatı" value="122.000 TL" nowrap />
+        <Row label="Vergisiz değer (matrah)" value="≈ 59.980 TL" nowrap />
+        <Row label="Sadece KDV’li olsaydı" value="≈ 71.980 TL" nowrap />
         <div style={{ height: 1, background: 'var(--cream-300)', margin: '2px 0' }} />
-        <Row label="Ekstra vergi (ÖTV + TRT payı + fon + KDV’si)" value="≈ 50.020 TL" strong />
+        <Row label="Ekstra vergi (ÖTV + TRT payı + fon + KDV’si)" value="≈ 50.020 TL" nowrap strong />
       </div>
       <p style={muted}>
         Yani 122.000 TL’lik telefonun yaklaşık 50 bin lirası, standart KDV’nin üstüne binen ekstra vergidir.
