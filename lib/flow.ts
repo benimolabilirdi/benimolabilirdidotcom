@@ -58,6 +58,41 @@ export function applicableQuips(
   return quips.filter(matches).sort((a, b) => rank(a) - rank(b))
 }
 
+/**
+ * "Kimsin?" adımı seçeneği (docs/07). Katalog DB'den gelir; kullanıcının SEÇİMİ
+ * DB'ye yazılmaz — client state'te durur, paylaşım linkinde encode edilir.
+ * imageLine null → görselde p4 satırı hiç basılmaz.
+ */
+export type Persona = {
+  key: string
+  groupKey: string
+  uiLabel: string
+  uiHelper: string | null
+  imageLine: string | null
+}
+
+/**
+ * Persona kataloğunu iki adımlı seçim için gruplar: tek satırlı gruplar doğrudan
+ * seçilir, çok satırlılar (ucretli/sahis) ikinci dokunuşta dilim sorar.
+ * Grup etiketi ui_label'ın ' · ' öncesi ("🧾 Ücretliyim · %27 dilimi" → "🧾 Ücretliyim").
+ * Şema'da ayrı group_label yok (docs/07 §4), tekrar etmemek için buradan türetiyoruz.
+ */
+export function groupPersonas(personas: Persona[]): Array<{ key: string; label: string; options: Persona[] }> {
+  const groups: Array<{ key: string; label: string; options: Persona[] }> = []
+  for (const p of personas) {
+    const existing = groups.find((g) => g.key === p.groupKey)
+    if (existing) existing.options.push(p)
+    else groups.push({ key: p.groupKey, label: p.uiLabel.split(' · ')[0], options: [p] })
+  }
+  return groups
+}
+
+/** Dilim çipinin etiketi: ui_label'ın ' · ' sonrası ("%27 dilimi"). Yoksa tam etiket. */
+export function personaTierLabel(p: Persona): string {
+  const parts = p.uiLabel.split(' · ')
+  return parts.length > 1 ? parts.slice(1).join(' · ') : p.uiLabel
+}
+
 export type FlowCategory = {
   slug: string
   name: string

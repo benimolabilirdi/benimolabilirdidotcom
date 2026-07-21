@@ -5,15 +5,18 @@
 import Link from 'next/link'
 import { Flow } from '@/components/flow/Flow'
 import { createClient } from '@/lib/supabase/server'
-import type { FlowCategory, FlowProduct, FlowTag, Quip } from '@/lib/flow'
+import type { FlowCategory, FlowProduct, FlowTag, Persona, Quip } from '@/lib/flow'
 import type { TaxFormula } from '@/lib/tax'
 
 export const dynamic = 'force-dynamic'
 
-async function getData(): Promise<{ categories: FlowCategory[]; quips: Quip[] }> {
+/** Persona kataloğunun geçerli olduğu yıl (dilim eşikleri yıla bağlı, docs/07 §4). */
+const PERSONA_YEAR = 2026
+
+async function getData(): Promise<{ categories: FlowCategory[]; quips: Quip[]; personas: Persona[] }> {
   const supabase = createClient()
 
-  const [{ data: cats }, { data: prods }, { data: quipRows }] = await Promise.all([
+  const [{ data: cats }, { data: prods }, { data: quipRows }, { data: personaRows }] = await Promise.all([
     supabase
       .from('categories')
       .select('slug, name, emoji, tax_formula, is_purchasable, is_spendable')
@@ -31,7 +34,21 @@ async function getData(): Promise<{ categories: FlowCategory[]; quips: Quip[] }>
       .select('scope, product_match, text, hide_if_same_category, categories(slug)')
       .eq('is_active', true)
       .order('sort_order'),
+    supabase
+      .from('personas')
+      .select('key, group_key, ui_label, ui_helper, image_line')
+      .eq('is_active', true)
+      .eq('valid_year', PERSONA_YEAR)
+      .order('sort_order'),
   ])
+
+  const personas: Persona[] = (personaRows ?? []).map((p) => ({
+    key: p.key,
+    groupKey: p.group_key,
+    uiLabel: p.ui_label,
+    uiHelper: p.ui_helper,
+    imageLine: p.image_line,
+  }))
 
   const quips: Quip[] = (quipRows ?? []).map((q) => ({
     scope: q.scope as Quip['scope'],
@@ -41,7 +58,7 @@ async function getData(): Promise<{ categories: FlowCategory[]; quips: Quip[] }>
     hideIfSameCategory: q.hide_if_same_category,
   }))
 
-  if (!cats) return { categories: [], quips }
+  if (!cats) return { categories: [], quips, personas }
 
   const bySlug = new Map<string, FlowProduct[]>()
   for (const p of prods ?? []) {
@@ -79,11 +96,11 @@ async function getData(): Promise<{ categories: FlowCategory[]; quips: Quip[] }>
     }
   })
 
-  return { categories, quips }
+  return { categories, quips, personas }
 }
 
 export default async function AlPage() {
-  const { categories, quips } = await getData()
+  const { categories, quips, personas } = await getData()
 
   if (categories.filter((c) => c.isPurchasable).length === 0) {
     return (
@@ -94,5 +111,5 @@ export default async function AlPage() {
     )
   }
 
-  return <Flow categories={categories} quips={quips} />
+  return <Flow categories={categories} quips={quips} personas={personas} />
 }

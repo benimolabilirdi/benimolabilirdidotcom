@@ -33,11 +33,14 @@ export function Dream({
   selection,
   categories,
   quips,
+  personaLine,
   onBack,
 }: {
   selection: PurchaseSelection
   categories: FlowCategory[]
   quips: Quip[]
+  /** docs/07 p4 satırı. Beyan yoksa undefined → görselde hiç basılmaz. */
+  personaLine?: string
   onBack: () => void
 }) {
   // Bütçe = ekstra vergi (docs/01 §4.7: standart KDV hariç, üstüne binen kısım).
@@ -106,7 +109,14 @@ export function Dream({
   }
 
   if (step === 'end') {
-    return <Preview selection={selection} items={items} remaining={Math.max(0, remaining)} />
+    return (
+      <Preview
+        selection={selection}
+        items={items}
+        remaining={Math.max(0, remaining)}
+        personaLine={personaLine}
+      />
+    )
   }
 
   return (

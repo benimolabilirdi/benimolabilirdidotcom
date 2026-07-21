@@ -21,10 +21,13 @@ export function Preview({
   selection,
   items,
   remaining,
+  personaLine,
 }: {
   selection: PurchaseSelection
   items: DreamItem[]
   remaining: number
+  /** docs/07 p4 — "Oysa ben…". Beyan yoksa undefined, satır basılmaz. */
+  personaLine?: string
 }) {
   const [format, setFormat] = useState<ShareCardFormat>('story')
 
@@ -35,10 +38,11 @@ export function Preview({
       totalTax: selection.totalTax,
       excessTax: selection.excessTax,
       taxComponents: selection.taxComponents,
+      personaLine,
       items,
       remaining,
     }),
-    [selection, items, remaining]
+    [selection, items, remaining, personaLine]
   )
 
   const shareUrl = useMemo(() => {

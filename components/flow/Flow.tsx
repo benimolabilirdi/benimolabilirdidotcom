@@ -2,23 +2,36 @@
 
 /**
  * Kullanıcı akışı kabuğu (Faz C). Adım durumu client'ta (stateless, DB'ye yazım yok).
- * picker (C2) → shock (C3) → dream (C4). Şok ekranı lacivert yüzey = duygusal zirve.
+ * picker (C2) → shock (C3) → persona (docs/07) → dream (C4).
+ * Şok + persona lacivert yüzeyde: zirve ve onun dekreşendosu. Hayal kreme döner.
  */
 import { useState } from 'react'
 import { Picker } from '@/components/flow/Picker'
 import { Dream } from '@/components/flow/Dream'
+import { PersonaStep } from '@/components/flow/Persona'
 import { CountUp } from '@/components/CountUp'
 import { Wordmark } from '@/components/Wordmark'
 import { formatTL } from '@/lib/share-card'
-import type { FlowCategory, PurchaseSelection, Quip } from '@/lib/flow'
+import type { FlowCategory, Persona, PurchaseSelection, Quip } from '@/lib/flow'
 
-type Step = 'picker' | 'shock' | 'dream'
+type Step = 'picker' | 'shock' | 'persona' | 'dream'
 
-export function Flow({ categories, quips }: { categories: FlowCategory[]; quips: Quip[] }) {
+export function Flow({
+  categories,
+  quips,
+  personas,
+}: {
+  categories: FlowCategory[]
+  quips: Quip[]
+  personas: Persona[]
+}) {
   const [step, setStep] = useState<Step>('picker')
   const [selection, setSelection] = useState<PurchaseSelection | null>(null)
+  const [persona, setPersona] = useState<Persona | null>(null)
 
-  const onDark = step === 'shock'
+  // Katalog boşsa (seed edilmemiş) adımı hiç göstermeyip şoktan hayale geçeriz.
+  const hasPersonas = personas.length > 0
+  const onDark = step === 'shock' || step === 'persona'
 
   return (
     <main
@@ -53,12 +66,29 @@ export function Flow({ categories, quips }: { categories: FlowCategory[]; quips:
         <ShockScreen
           selection={selection}
           onBack={() => setStep('picker')}
-          onDream={() => setStep('dream')}
+          onDream={() => setStep(hasPersonas ? 'persona' : 'dream')}
+        />
+      ) : null}
+
+      {step === 'persona' ? (
+        <PersonaStep
+          personas={personas}
+          onBack={() => setStep('shock')}
+          onPick={(p) => {
+            setPersona(p)
+            setStep('dream')
+          }}
         />
       ) : null}
 
       {step === 'dream' && selection ? (
-        <Dream selection={selection} categories={categories} quips={quips} onBack={() => setStep('shock')} />
+        <Dream
+          selection={selection}
+          categories={categories}
+          quips={quips}
+          personaLine={persona?.imageLine ?? undefined}
+          onBack={() => setStep(hasPersonas ? 'persona' : 'shock')}
+        />
       ) : null}
     </main>
   )
